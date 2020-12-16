@@ -51,7 +51,7 @@ foreach ($ISSUE_TYPES as $key => $arr) {
 
 
     $query = "SELECT * FROM lists WHERE pid = ? AND type = ? AND ";
-    $query .= "(enddate is null or enddate = '' or enddate = '0000-00-00') ";
+    $query .= "(enddate is null or enddate = '0000-00-00') ";
     if ($GLOBALS['erx_enable'] && $GLOBALS['erx_medication_display'] && $key=='medication') {
         $query .= "and erx_uploaded != '1' ";
     }
