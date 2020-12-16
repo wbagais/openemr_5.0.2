@@ -442,7 +442,12 @@ function getHistoryData($pid, $given = "*", $dateStart = '', $dateEnd = '')
     }
 
     if ($given == 'tobacco') {
-        echo '$dateStart = '.$dateStart.' and $dateEnd = '.$dateEnd;
+      if($dateStart ==  NULL){
+        $dateStart = NULL;
+      }
+      if($dateEnd ==  NULL){
+        $dateEnd = NULL;
+      }
         $res = sqlQuery("select $given from history_data where pid = ? and tobacco is not null and date >= ? and date <= ? order by date DESC limit 0,1", array($pid,$dateStart,$dateEnd));
     }
 
