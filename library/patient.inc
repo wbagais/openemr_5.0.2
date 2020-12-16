@@ -442,6 +442,9 @@ function getHistoryData($pid, $given = "*", $dateStart = '', $dateEnd = '')
     }
 
     if ($given == 'tobacco') {
+      if ($dateStart = '' or  $dateEnd = '') {
+        $res = sqlQuery("select $given from history_data where pid = ? and tobacco is not null and date >= NOW() and date <= NOW() order by date DESC limit 0,1", array($pid));
+      }else
         $res = sqlQuery("select $given from history_data where pid = ? and tobacco is not null and date >= ? and date <= ? order by date DESC limit 0,1", array($pid,$dateStart,$dateEnd));
     }
 
@@ -1872,13 +1875,13 @@ function getEffectiveInsurances($patient_id, $encdate)
 function getAllinsurances($pid)
 {
     $insarr = array();
-    $sql = "SELECT a.type, a.provider, a.plan_name, a.policy_number, a.group_number, 
-           a.subscriber_lname, a.subscriber_fname, a.subscriber_relationship, a.subscriber_employer, 
-		   b.name, c.line1, c.line2, c.city, c.state, c.zip 
+    $sql = "SELECT a.type, a.provider, a.plan_name, a.policy_number, a.group_number,
+           a.subscriber_lname, a.subscriber_fname, a.subscriber_relationship, a.subscriber_employer,
+		   b.name, c.line1, c.line2, c.city, c.state, c.zip
            FROM `insurance_data` AS a
            RIGHT JOIN insurance_companies AS b
            ON a.provider = b.id
-           RIGHT JOIN addresses AS c 
+           RIGHT JOIN addresses AS c
            ON a.provider = c.foreign_id
            WHERE a.pid = ? ";
     $inco = sqlStatement($sql, array($pid));
@@ -1972,7 +1975,7 @@ function is_patient_deceased($pid, $date = '')
   // Query for deceased status (if person is deceased gets days_deceased and date_deceased)
     $results = sqlQuery("SELECT DATEDIFF(?,`deceased_date`) AS `days_deceased`, `deceased_date` AS `date_deceased` " .
                       "FROM `patient_data` " .
-                      "WHERE `pid` = ? AND `deceased_date` IS NOT NULL AND `deceased_date` != '0000-00-00 00:00:00' AND 
+                      "WHERE `pid` = ? AND `deceased_date` IS NOT NULL AND `deceased_date` != '0000-00-00 00:00:00' AND
                       `deceased_date` <= ?", array($date,$pid,$date));
 
     if (empty($results)) {
