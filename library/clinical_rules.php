@@ -301,7 +301,7 @@ function allergy_conflict($patient_id, $mode, $user, $test = false)
   // Collect allergies
     $res_allergies = sqlStatement("SELECT `title` FROM `lists` WHERE `type`='allergy' " .
                                 "AND `activity`=1 " .
-                                "AND ( `enddate` IS NULL OR `enddate`='' OR `enddate` > NOW() ) " .
+                                "AND ( `enddate` IS NULL OR `enddate` IS NULL OR `enddate` > NOW() ) " .
                                 "AND `pid`=?", array($patient_id));
     $allergies = array();
     for ($iter=0; $row=sqlFetchArray($res_allergies); $iter++) {
