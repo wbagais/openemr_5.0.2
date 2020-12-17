@@ -52,7 +52,9 @@ if($is_post_request){
     $emparray = [];
     while($row =sqlFetchArray($result))
     {
-        $emparray[] = $row;
+	    $id = $row['id'];
+	    $name = $row['name'];
+	    $emparray[] = array("id" => $id, "name" => $name);
     }
     echo json_encode($emparray);
 
@@ -198,18 +200,23 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
 				var id = $("#panels").val();
 				$.ajax({
 					url: "panels.php",
-					method: 'post',
-					data: 'id=' + id
-				}).done(function(sub_panels){
-					sub_panels = JSON.parse(sub_panels.split("<html>")[0]);
-					$('#sub_panels').empty();
-					sub_panels.forEach(function(sub_panels){
-						$('#sub_panels').append('<input type="checkbox" id="panel_ids" name="panel_ids[]" value="' + sub_panels.id +
-            '"/>' + sub_panels.name + '<br>');
-					})
-				})
-			})
-		})
+					type: 'post',
+					data: {id:id},
+					dataType: 'json',
+					success:function(sub_panels){
+						var  len =  response.length;
+						$("#panels").empty();
+						for(var i = 0; i < len;  i++){
+							var id = sub_panels[i]['id'];
+							var name = sub_panels[i]['name'];
+							$('#sub_panels').append('<input type="checkbox" id="panel_ids" name="panel_ids[]" value="' + id + '"/>' + name + '<br>');
+						}
+					}
+				});
+			});
+		});
+
+		
 	</script>
 </head>
 
