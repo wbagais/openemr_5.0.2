@@ -20,7 +20,7 @@
 function isPanelDB()
 {
   # test query
-  $sql = "SELECT * FROM list_options WHERE list_id =  'panels' ";
+  $sql = "SELECT * FROM list_options WHERE list_id =  \"panels\" ";
   //if (sqlQueryNoLogIgnoreError(add_escape_custom($sql)))
   if (sqlQuery(add_escape_custom($sql)))
   {
@@ -249,7 +249,7 @@ function dischargePatient($enrollment_id){
   * if it next, it will return the next follow up appointment
   * if it all, it will return all the appointments
   * @return array   appointments list
-  * TODO  fix the appointment  2 functions 
+  * TODO  fix the appointment  2 functions
   */
 function getPanelAppointment($panel_name, $pid, $eventDates = 'next'){
   $sql  = "SELECT e.pc_eventDate, e.pc_startTime, e.pc_endTime, c.pc_catname, e.pc_apptstatus ";
