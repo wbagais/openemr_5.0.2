@@ -19,10 +19,11 @@
   */
 function isPanelDB()
 {
-  # test query
-  $sql = "SELECT * FROM list_options WHERE list_id =  \"panels\" ";
+	# test query
+  $listid = "panels";
+  $sql = "SELECT * FROM list_options WHERE list_id ='" . $listid . "'";
   //if (sqlQueryNoLogIgnoreError(add_escape_custom($sql)))
-  if (sqlQuery(add_escape_custom($sql)))
+  if (sqlQuery(($sql)))
   {
     return TRUE; // if the result is array
   } else {
@@ -60,7 +61,7 @@ function getAllPanels()
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM list_options WHERE list_id =  \'panels\' AND option_id NOT LIKE \'%\\_%\' ";
+  $sql = "SELECT * FROM list_options WHERE list_id =  'panels' AND option_id NOT LIKE '%\\_%' ";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -147,7 +148,7 @@ function getPanelsByPatient_id($pid, $status = "active")
   if ($status != "all"){
     $sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
   }
-  $sql .= "ORDER BY c.name ";
+  $sql .= "ORDER BY l.title ";
   return sqlStatement($sql);
 
   } else { return -1; }
@@ -172,19 +173,19 @@ function getPatientSubPanelsInfo($pid, $panel = "None", $status = "active")
   else {
 
 
-    $sql = "SELECT e.*, p.title AS sub_panel  ";
+    $sql = "SELECT e.*, l.title AS sub_panel  ";
     $sql .= "FROM panel_enrollment AS  e ";
     $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
     $sql .= " WHERE list_id =  \"panels\" ";
     $sql .= " AND option_id LIKE \"%\\_%\" ";
-    $sql .= "WHERE e.patient_id = \"" . add_escape_custom($pid) . "\" ";
+    $sql .= " AND e.patient_id = \"" . add_escape_custom($pid) . "\" ";
     if ($status != "all"){
       $sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
     }
-    if ($panelCategory != "None"){
-      $sql .= "AND c.name = \"" . add_escape_custom($panelCategory) . "\" ";
+    if ($panel != "None"){
+      $sql .= "AND l.option_id = \"" . add_escape_custom($panel) . "\\_%\" ";
     }
-    $sql .= "ORDER BY e.status, category ";
+    $sql .= "ORDER BY e.status ";
     return sqlStatement($sql);
   }
 }
