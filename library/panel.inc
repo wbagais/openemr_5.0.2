@@ -20,7 +20,7 @@
 function isPanelDB()
 {
   # test query
-  $sql = "SELECT * FROM panel_category ";
+  $sql = "SELECT * FROM list_options WHERE list_id =  'panels' ";
   //if (sqlQueryNoLogIgnoreError(add_escape_custom($sql)))
   if (sqlQuery(add_escape_custom($sql)))
   {
@@ -55,30 +55,30 @@ function getEnrollments($pid)
   * if the tables  do not exist
   * @return integer return -1
   */
-function getAllPanelCategories()
-{
-  if (isPanelDB())
-  {
-
-  $sql = "SELECT * FROM panel_category ";
-  return sqlStatement($sql);
-  } else { return -1; }
-}
-
-/**
-  * Purpose:
-  * request the panels information
-  * if the tables exist
-  * @return array the panel {id, name, category_id}
-  * if the tables  do not exist
-  * @return integer return -1
-  */
 function getAllPanels()
 {
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM panel ";
+  $sql = "SELECT * FROM list_options WHERE list_id =  \'panels\' AND option_id NOT LIKE \'%\\_%\' ";
+  return sqlStatement($sql);
+  } else { return -1; }
+}
+
+/**
+  * Purpose:
+  * request the panels information
+  * if the tables exist
+  * @return array the panel {id, name, category_id}
+  * if the tables  do not exist
+  * @return integer return -1
+  */
+function getAllSubPanels()
+{
+  if (isPanelDB())
+  {
+
+  $sql = "SELECT * FROM list_options WHERE list_id =  \"panels\" AND option_id LIKE \"%\\_%\" ";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -90,13 +90,13 @@ function getAllPanels()
   * if the tables  do not exist
   * @return integer return -1
   */
-function getPanelsByCategory($category_id)
+function getSubPanelsByPanelId($panel_id)
 {
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM panel ";
-  $sql .= "WHERE category_id= \"" .add_escape_custom($category_id) ."\"";
+  $sql = "SELECT * FROM list_options WHERE list_id =  \'panels\' ";
+  $sql .= "AND option_id LIKE \"" . add_escape_custom($panel_id) . "_%\"";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -104,44 +104,23 @@ function getPanelsByCategory($category_id)
 
 /**
   * Purpose:
-  * request the panels information based on panel id
-  * @param  integer panel_id
+  * request the panel or sub panel information based on the id
+  * @param  integer id
   * if the tables exist
-  * @return array the panel {id, name, category_id}
+  * @return array the panel information
   * if the tables  do not exist
   *@return integer return -1
-  *TODO change the name of the function to getPanelById
   */
-function getPanel($panel_id)
+function getPanelById($id)
 {
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM panel WHERE id=" . add_escape_custom($panel_id);
+  $sql = "SELECT * FROM list_options WHERE list_id =  'panels' AND option_id =\'" . add_escape_custom($id) . "\'";
   return sqlStatement($sql);
   } else { return -1; }
 }
 
-/**
-  * Purpose:
-  * request the panel category information based on $category_id
-  * Parameters:
-  * @param integer $category_id panal category id
-  * if the tables exist:
-  * @return array the panel category {id, name}
-  * if the tables  are not exist
-  *@return integer -1
-  *TODO change panel category to panel and panels to sub panel
-  */
-function getPanelCategory($category_id)
-{
-  if (isPanelDB())
-  {
-  // get  the category name
-  $sql = "SELECT * FROM panel_category WHERE id=" . add_escape_custom($category_id);
-  return sqlQuery($sql);
-  } else { return -1; }
-}
 
 /**
   * Purpose:
@@ -154,16 +133,17 @@ function getPanelCategory($category_id)
   *@return integer -1
   *TODO change panel category to panel and panels to sub panel
   */
-function getPanelCategoryByPatient_id($pid, $status = "active")
+function getPanelsByPatient_id($pid, $status = "active")
 {
   if (isPanelDB())
   {
   // get  the category name
-  $sql = "SELECT DISTINCT c.* ";
+  $sql = "SELECT DISTINCT l.title as name ";
   $sql .= " FROM panel_enrollment AS e  ";
-  $sql .= "JOIN panel AS p ON e.panel_id = p.id  ";
-  $sql .= "JOIN panel_category AS c ON p.category_id = c.id ";
-  $sql .= "WHERE e.patient_id =\"" . add_escape_custom($pid) . "\" ";
+  $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
+  $sql .= " WHERE list_id =  \"panels\" ";
+  $sql .= " AND option_id NOT LIKE \"%\\_%\" ";
+  $sql .= " AND e.patient_id =\"" . add_escape_custom($pid) . "\" ";
   if ($status != "all"){
     $sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
   }
@@ -183,7 +163,7 @@ function getPanelCategoryByPatient_id($pid, $status = "active")
   * if the tables are not exist or if the patient is not enrolled in any panels yet:
   * @return integer return -1
   */
-function getPatientPanelsInfo($pid, $panelCategory = "None", $status = "active")
+function getPatientSubPanelsInfo($pid, $panel = "None", $status = "active")
 {
   if (!isPanelDB()) {
     #if the panels is not activated print bellow line
@@ -192,10 +172,11 @@ function getPatientPanelsInfo($pid, $panelCategory = "None", $status = "active")
   else {
 
 
-    $sql = "SELECT e.*, p.name AS panel, c.name AS  category  ";
+    $sql = "SELECT e.*, p.title AS sub_panel  ";
     $sql .= "FROM panel_enrollment AS  e ";
-    $sql .= "JOIN panel AS p ON e.panel_id = p.id ";
-    $sql .= "JOIN panel_category AS c ON p.category_id = c.id ";
+    $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
+    $sql .= " WHERE list_id =  \"panels\" ";
+    $sql .= " AND option_id LIKE \"%\\_%\" ";
     $sql .= "WHERE e.patient_id = \"" . add_escape_custom($pid) . "\" ";
     if ($status != "all"){
       $sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
@@ -268,6 +249,7 @@ function dischargePatient($enrollment_id){
   * if it next, it will return the next follow up appointment
   * if it all, it will return all the appointments
   * @return array   appointments list
+  * TODO  fix the appointment  2 functions 
   */
 function getPanelAppointment($panel_name, $pid, $eventDates = 'next'){
   $sql  = "SELECT e.pc_eventDate, e.pc_startTime, e.pc_endTime, c.pc_catname, e.pc_apptstatus ";

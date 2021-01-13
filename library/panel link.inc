@@ -1,0 +1,1 @@
+/Users/wbagais/Sites/openemr/server/openemr/library/panel.inc

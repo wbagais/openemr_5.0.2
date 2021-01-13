@@ -48,7 +48,7 @@ if($is_post_request){
 //post request from jx
   if(isset($_POST['id'])){
     $id = $_POST['id'] ?? '';
-    $result = getPanelsByCategory($id);
+    $result = getSubPanelsByPanelId($id);
     $emparray = [];
     while($row =sqlFetchArray($result))
     {
@@ -216,7 +216,7 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
 			});
 		});
 
-		
+
 	</script>
 </head>
 
@@ -228,7 +228,7 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
     //display panels information
     // check if the patien inrolled in any panels
         if (isset($pid)) {
-        $panels = getPanelCategoryByPatient_id($pid,"all");
+        $panels = getPanelsByPatient_id($pid,"all");
         if ($panels === -1 or sqlNumRows($panels)<1) {
            echo ("This patien is not inrolled in any panel</br></br>");
          }else {  //if the patient inrolled into a panel then print the table
@@ -249,7 +249,7 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
    <?php
    // print the panels info for the selected pation in a talbe format
    while ($row = sqlFetchArray($panels)) {
-     $SubPanels = getPatientPanelsInfo($pid,$row['name'],"all");
+     $SubPanels = getPatientSubPanelsInfo($pid,$row['name'],"all");
      ?>
 
      <tr class="breakrow">
@@ -269,7 +269,7 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
        <?php while ($row = sqlFetchArray($SubPanels)) { ?>
           <tr class="datarow">
              <td><?php echo "" ?></td>
-             <td><?php echo attr($row['panel']); ?></td>
+             <td><?php echo attr($row['sub_panel']); ?></td>
              <td><?php echo attr($row['status']); ?></td>
              <td><?php echo attr($row['risk_stratification']); ?></td>
              <td><?php echo attr($row['enrollment_date']); ?></td>
@@ -306,7 +306,7 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
 <form action="#" method="post" name="enrolment"  onsubmit="return checkform()" >
   <h3>Enroll to a panel</h3>
   <?php
-   $panels = getAllPanelCategories();
+   $panels = getAllPanels();
   ?>
 
   <b><label for="panel">Select the panel:</label></b>
