@@ -36,7 +36,8 @@ function isPanelDB()
   * request the patient panle enrolment based on patient id
   * @param integer patient id
   * if the tables exist:
-  * @return array the enrolmments list {id, patient_id, enrolment_date, discharge_date, status}
+  * @return array the enrolmments list
+  * {id, patient_id, enrolment_date, discharge_date, status}
   * if the tables  do not exist:
   *@return integer return -1
   */
@@ -44,7 +45,8 @@ function getEnrollments($pid)
 {
   if (isPanelDB())
   {
-    $sql = "SELECT * FROM panel_enrollment WHERE patient_id = " . add_escape_custom($pid);
+    $sql = "SELECT * FROM panel_enrollment ";
+    $sql .= "WHERE patient_id = " . add_escape_custom($pid);
     return sqlStatement($sql);
   } else { return -1; }
 }
@@ -61,7 +63,9 @@ function getAllPanels()
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM list_options WHERE list_id =  'panels' AND option_id NOT LIKE '%\\_%' ";
+  $sql = "SELECT * FROM list_options ";
+  $sql .= " WHERE list_id =  'panels' ";
+  $sql .= " AND option_id NOT LIKE \"%\\_%\" ";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -79,7 +83,9 @@ function getAllSubPanels()
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM list_options WHERE list_id =  \"panels\" AND option_id LIKE \"%\\_%\" ";
+  $sql = "SELECT * FROM list_options ";
+  $sql .=" WHERE list_id =  \"panels\" ";
+  $sql .= " AND option_id LIKE \"%\\_%\" ";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -96,8 +102,9 @@ function getSubPanelsByPanelId($panel_id)
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM list_options WHERE list_id =  \'panels\' ";
-  $sql .= "AND option_id LIKE \"" . add_escape_custom($panel_id) . "_%\"";
+  $sql  = "SELECT * FROM list_options ";
+  $sql .= " WHERE list_id =  \'panels\' ";
+  $sql .= " AND option_id LIKE \"" . add_escape_custom($panel_id) . "_%\"";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -117,7 +124,9 @@ function getPanelById($id)
   if (isPanelDB())
   {
 
-  $sql = "SELECT * FROM list_options WHERE list_id =  'panels' AND option_id =\'" . add_escape_custom($id) . "\'";
+  $sql = "SELECT * FROM list_options ";
+  $sql .= " WHERE list_id =  'panels' ";
+  $sql  .= " AND option_id =\'" . add_escape_custom($id) . "\'";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -160,7 +169,8 @@ function getPanelsByPatient_id($pid, $status = "active")
   * @param integer $pid  patient id
   * @param string $status (by defulat the status is active)
   * if the tables exist:
-  * @return array  patient panels data {id, patient_id, panel_id, enrolment_date, discharge_date, status, panel, category}
+  * @return array  patient panels data {id, patient_id, panel_id,
+  * enrolment_date, discharge_date, status, panel, category}
   * if the tables are not exist or if the patient is not enrolled in any panels yet:
   * @return integer return -1
   */
