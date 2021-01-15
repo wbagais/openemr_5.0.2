@@ -307,17 +307,17 @@ if (confirm("Do you want to discharge from "+panel+"?")) {
   <h3>Enroll to a panel</h3>
   <?php
    $panels = getAllPanels();
-  ?>
+?>
 
   <b><label for="panel">Select the panel:</label></b>
   <select name="panels" id="panels">
     <option value= "select_panel" id="select_panel" selected disabled>Select Panel</option>
-    <?php
+<?php
     while ($row = sqlFetchArray($panels)) {
-      echo "<option value=\"" . attr($row['id']) . "\"";
-      echo "id=\"" . attr($row['id']) . "\"";
+      echo "<option value=\"" . attr($row['option_id']) . "\"";
+      echo "id=\"" . attr($row['title']) . "\"";
       echo ">";
-      echo attr($row['name']) . "</option>";
+      echo attr($row['title']) . "</option>";
     }
   ?>
 </select>
