@@ -20,7 +20,7 @@
 function isPanelDB()
 {
 	# test query
-  $listid = "panels";
+  $listid = "Panel_Type";
   $sql = "SELECT * FROM list_options WHERE list_id ='" . $listid . "'";
   //if (sqlQueryNoLogIgnoreError(add_escape_custom($sql)))
   if (sqlQuery(($sql)))
@@ -64,7 +64,7 @@ function getAllPanels()
   {
 
   $sql = "SELECT * FROM list_options ";
-  $sql .= " WHERE list_id =  'panels' ";
+  $sql .= " WHERE list_id =  'Panel_Type' ";
   $sql .= " AND option_id NOT LIKE \"%\\_%\" ";
   return sqlStatement($sql);
   } else { return -1; }
@@ -84,7 +84,7 @@ function getAllSubPanels()
   {
 
   $sql = "SELECT * FROM list_options ";
-  $sql .=" WHERE list_id =  \"panels\" ";
+  $sql .=" WHERE list_id =  \"Panel_Type\" ";
   $sql .= " AND option_id LIKE \"%\\_%\" ";
   return sqlStatement($sql);
   } else { return -1; }
@@ -103,7 +103,7 @@ function getSubPanelsByPanelId($panel_id)
   {
 
   $sql  = "SELECT * FROM list_options ";
-  $sql .= " WHERE list_id =  \'panels\' ";
+  $sql .= " WHERE list_id =  \'Panel_Type\' ";
   $sql .= " AND option_id LIKE \"" . add_escape_custom($panel_id) . "_%\"";
   return sqlStatement($sql);
   } else { return -1; }
@@ -125,7 +125,7 @@ function getPanelById($id)
   {
 
   $sql = "SELECT * FROM list_options ";
-  $sql .= " WHERE list_id =  'panels' ";
+  $sql .= " WHERE list_id =  'Panel_Type' ";
   $sql  .= " AND option_id =\'" . add_escape_custom($id) . "\'";
   return sqlStatement($sql);
   } else { return -1; }
@@ -148,16 +148,19 @@ function getPanelsByPatient_id($pid, $status = "active")
   if (isPanelDB())
   {
   // get  the category name
-  $sql = "SELECT DISTINCT l.title as name ";
-  $sql .= " FROM panel_enrollment AS e  ";
-  $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
-  $sql .= " WHERE list_id =  \"panels\" ";
-  $sql .= " AND option_id NOT LIKE \"%\\_%\" ";
+  $sql  = "SELECT DISTINCT e.patient_id , e.option_id as id, l.title as panel ";
+  $sql .= " FROM (SELECT DISTINCT e.*,  REGEXP_SUBSTR(option_id, '^.*(?=_)') as option_id ";
+  $sql .= " FROM panel_enrollment AS e ";
+  $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id) e ";
+  $sql .= " JOIN list_options AS l ";
+  $sql .= " ON e.option_id = l.option_id ";
+  $sql .= " WHERE list_id = \"Panel_Type\" ";
   $sql .= " AND e.patient_id =\"" . add_escape_custom($pid) . "\" ";
+  $sql .= " ORDER BY l.title ";
   if ($status != "all"){
-    $sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
+    $sql .= " AND e.status = \"" . add_escape_custom($status) . "\" ";
   }
-  $sql .= "ORDER BY l.title ";
+
   return sqlStatement($sql);
 
   } else { return -1; }
@@ -181,22 +184,23 @@ function getPatientSubPanelsInfo($pid, $panel = "None", $status = "active")
     return -1;
   }
   else {
-
-
-    $sql = "SELECT e.*, l.title AS sub_panel  ";
-    $sql .= "FROM panel_enrollment AS  e ";
-    $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
-    $sql .= " WHERE list_id =  \"panels\" ";
-    $sql .= " AND option_id LIKE \"%\\_%\" ";
-    $sql .= " AND e.patient_id = \"" . add_escape_custom($pid) . "\" ";
-    if ($status != "all"){
-      $sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
-    }
-    if ($panel != "None"){
-      $sql .= "AND l.option_id = \"" . add_escape_custom($panel) . "\\_%\" ";
-    }
-    $sql .= "ORDER BY e.status ";
-    return sqlStatement($sql);
+	$sql  = "SELECT DISTINCT e.*, l.title as panel ";
+	$sql .= " FROM ";
+	$sql .= " (SELECT DISTINCT e.*,  REGEXP_SUBSTR(option_id, '^.*(?=_)') as option_id, l.title as sub_panel ";
+	$sql .= " FROM panel_enrollment AS e ";
+	$sql .= " JOIN list_options AS l ON e.panel_id = l.option_id) e ";
+	$sql .= " JOIN list_options AS l ";
+	$sql .= " ON e.option_id = l.option_id ";
+	$sql .= " WHERE list_id = \"Panel_Type\" ";
+	$sql .= " AND e.patient_id  = \"" . add_escape_custom($pid) . "\" ";
+	if ($panel != "None"){
+		$sql .= " AND e.option_id  = \"" . add_escape_custom($panel) . "\" ";
+   	}
+	if ($status != "all"){
+		$sql .= "AND e.status = \"" . add_escape_custom($status) . "\" ";
+    	}
+	$sql .= "ORDER BY e.status ";
+    	return sqlStatement($sql);
   }
 }
 /**
@@ -208,11 +212,10 @@ function getPatientSubPanelsInfo($pid, $panel = "None", $status = "active")
   */
 function insertEnrolment($enrollment)
 {
-  foreach ($enrollment['panel_ids'] as $panel_id){
     #Check if the patient already enrolled and active
     $sql  = "SELECT id, status FROM panel_enrollment ";
     $sql .= "WHERE patient_id ='" .add_escape_custom($enrollment['patient_id']) . "' ";
-    $sql .= "AND panel_id ='" . add_escape_custom($panel_id) . "' ";
+    $sql .= "AND panel_id ='" . add_escape_custom($enrollment['panel_id']) . "' ";
     $sql .= 'AND status = "Active"';
     $resultSet = sqlQuery($sql);
 
@@ -226,13 +229,12 @@ function insertEnrolment($enrollment)
         $sql .= "(patient_id, panel_id, enrollment_date, status, risk_stratification) ";
         $sql .= " VALUES ( ";
         $sql .= "'" . add_escape_custom($enrollment['patient_id']) . "', ";
-        $sql .= "'" .add_escape_custom($panel_id) . "', ";
+        $sql .= "'" .add_escape_custom($enrollment['panel_id']) . "', ";
         $sql .= "'" . date('Y-m-d H:i:s') . "', ";
         $sql .=  "'" ."Active". "', ";
         $sql .= "'" .add_escape_custom($enrollment['risk_stratification']) . "' ";
-        $sql .= ")" ;
+	$sql .= ")" ;
         $result = sqlInsert($sql);
-    }
 }
 }
 /**
