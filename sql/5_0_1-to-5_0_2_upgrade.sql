@@ -1013,3 +1013,21 @@ INSERT INTO `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`
 INSERT INTO `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`, `codes`, `toggle_setting_1`, `toggle_setting_2`, `activity`, `subtype`) VALUES
 ('Eye_QP_RETINA_defaults', 'OUVITREOUS_vh', 'vit: hemorrhage', 1020, 0, 0, 'VITREOUS', 'vitreous hemorrhage', '', 0, 0, 0, 'OU');
 #EndIf
+
+#IfNotIndex list_options option_id
+ALTER TABLE 'list_options' ADD KEY option_id ('option_id');
+#EndIf
+
+#IfNotTable panel_enrollment
+create table panel_enrollment (
+    id int(4) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    patient_id bigint,
+    panel_id  varchar(100),
+    enrollment_date date,
+    discharge_date date,
+    status varchar(250),
+    risk_stratification varchar(250),
+    Foreign key(patient_id) REFERENCES patient_data(id),
+    Foreign key(panel_id) REFERENCES list_options(option_id)
+);
+#EndIf
