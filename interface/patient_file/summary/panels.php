@@ -174,6 +174,24 @@ function checkform() {
 		document.enrolment.submit();
 	}
 }
+
+function addSubPanels(ids,titles) {
+	var x = document.getElementById("panels").value;
+	var i;
+	var text="<select name='sub_panels' id='sub_panels'>";
+	for (i = 0; i < ids.length; i++) {
+		if (ids[i].substring(0, x.length) == x){
+
+			text += "<option value='" + ids[i];
+			text += "' id= ";
+		       text += "'" +	ids[i];
+			text += "' >";
+		       text +=	titles[i];
+ 			text +=   "</option>";
+	}	}
+  	text  +="</select>";
+  	document.getElementById("subPanelsDiv").innerHTML =  text;
+}	
 </script>
 
 </head>
@@ -255,9 +273,22 @@ if($row['status'] == 'Active'){?>
 <div id="form_background">
 <form action="#" method="post" name="enrolment"  onsubmit="return checkform()" >
 <h3>Enroll to a panel</h3>
-<?php $panels = getAllPanels(); ?>
+<?php 
+
+$panels = getAllPanels();
+
+$subpanels = getAllSubPanels();
+
+$ids = [];
+$titles = [];
+while($row = sqlFetchArray($subpanels))
+{
+	$titles[] = $row['title'];
+	$ids []= $row['option_id'];
+}
+?>
 <b><label for="panel">Select the panel:</label></b>
-<select name="panels" id="panels">
+<select name="panels" id="panels" onchange='addSubPanels( <?php echo json_encode($ids); ?> ,  <?php echo json_encode($titles); ?>)'>
 <option value= "select_panel" id="select_panel" selected disabled>Select Panel</option>
 <?php 
 while ($row = sqlFetchArray($panels)) {
@@ -268,21 +299,9 @@ while ($row = sqlFetchArray($panels)) {
 } ?>
 </select>
 
-<?php $subpanels = getAllSubPanels(); ?>
 <b><label for="sub_panels">Sub Panels</label></b>
-<div id="sub_panels" name="sub_panels">
+<div id ="subPanelsDiv">
       <!-- cod from javacript will be past here -->
-<select name="sub_panels" id="sub_panels">
-<option value= "select_sub_panel" id="select_sub_panel" selected disabled>Select Sub Panel</option>
-<?php
-while ($row = sqlFetchArray($subpanels)) {
-        echo "<option value=\"" . attr($row['option_id']) . "\"";
-        echo "id=\"" . attr($row['option_id']) . "\"";
-        echo ">";
-        echo attr($row['title']) . "</option>";
-} ?>
-</select>
-
 </div>
 </br>
 <b><label for="risk_stratification">Select the risk stratification:</label></b>
