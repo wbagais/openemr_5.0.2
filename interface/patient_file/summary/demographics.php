@@ -1573,25 +1573,23 @@ $oemr_ui = new OemrUI($arrOeUiSettings);
 
                         #dispday patient current panels
                         $panels = getPanelsByPatient_id($pid);
-                        $resultSet = getPatientSubPanelsInfo($pid);
-                        if ($resultSet === -1 or sqlNumRows($panels)<1) {
+                  
+                        if ($panels === -1 or sqlNumRows($panels)<1) {
                           echo ("This patien is not inrolled in any panel");
                         }
 
                         while ($row = sqlFetchArray($panels)) {
-                          //print the category
-                          echo "<b>" . attr($row['name']) . ": </b> <br/>";
+				$SubPanels = getPatientSubPanelsInfo($pid,$row['id']);
+				//print the category
+                          	echo "<b>" . attr($row['panel']) . ": </b> <br/>";
 
-                          $SubPanels = getPatientSubPanelsInfo($pid,$row['name']);
-
-                          while ($row = sqlFetchArray($SubPanels)) {
-                            //print the sub panels
-                            $pc_eventDate = sqlFetchArray(getPanelAppointment($row['sub_panel'], $pid))['pc_eventDate'];
-                            echo attr($row['sub_panel']) . " <br/>";
-                            echo "<b>Enrollment Date: </b>" . attr($row['enrollment_date']) . " <br/>";
-                            if (strtotime($pc_eventDate) > date("d/m/y")){
-                              echo "<b>Follow Up Date: </b>"
-                              . attr($pc_eventDate) . " <br/>";
+                          	while ($row = sqlFetchArray($SubPanels)) {
+                            		//print the sub panels     		
+                            		echo attr($row['sub_panel']) . " ";
+                            		echo "(enrollment date: " . attr($row['enrollment_date']) . ") <br/>";
+					$pc_eventDate = sqlFetchArray(getPanelAppointment($row['sub_panel'], $pid))['pc_eventDate'];
+					if (strtotime($pc_eventDate) > date("d/m/y")){
+                              			echo "<b>Follow Up Date: </b>" . attr($pc_eventDate) . " <br/>";
                             }
                           }
                           echo "<br/>"; // to keep empty line between the panels
