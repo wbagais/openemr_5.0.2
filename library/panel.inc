@@ -141,7 +141,6 @@ function getPanelById($id)
   * @return array the panel category
   * if the tables  are not exist
   *@return integer -1
-  *TODO change panel category to panel and panels to sub panel
   */
 function getPanelsByPatient_id($pid, $status = "active")
 {
@@ -149,7 +148,8 @@ function getPanelsByPatient_id($pid, $status = "active")
   {
   // get  the category name
   $sql  = "SELECT DISTINCT e.patient_id , e.option_id as id, l.title as panel ";
-  $sql .= " FROM (SELECT DISTINCT e.*,  REGEXP_SUBSTR(option_id, '^.*(?=_)') as option_id ";
+  //$sql .= " FROM (SELECT DISTINCT e.*,  REGEXP_SUBSTR(option_id, '^.*(?=_)') as option_id ";
+  $sql .= " FROM (SELECT DISTINCT e.*,  SUBSTRING_INDEX(option_id, '_', 1) as option_id ";
   $sql .= " FROM panel_enrollment AS e ";
   $sql .= " JOIN list_options AS l ON e.panel_id = l.option_id) e ";
   $sql .= " JOIN list_options AS l ";
@@ -186,7 +186,8 @@ function getPatientSubPanelsInfo($pid, $panel = "None", $status = "active")
   else {
 	$sql  = "SELECT DISTINCT e.*, l.title as panel ";
 	$sql .= " FROM ";
-	$sql .= " (SELECT DISTINCT e.*,  REGEXP_SUBSTR(option_id, '^.*(?=_)') as option_id, l.title as sub_panel ";
+	//$sql .= " (SELECT DISTINCT e.*,  REGEXP_SUBSTR(option_id, '^.*(?=_)') as option_id, l.title as sub_panel ";
+	$sql .= " (SELECT DISTINCT e.*,  SUBSTRING_INDEX(option_id, '_', 1) as option_id, l.title as sub_panel ";
 	$sql .= " FROM panel_enrollment AS e ";
 	$sql .= " JOIN list_options AS l ON e.panel_id = l.option_id) e ";
 	$sql .= " JOIN list_options AS l ";
