@@ -65,7 +65,7 @@ function dlgOpenWindow(url, winname, width, height) {
     }
     top.modaldialog = cascwin(url, winname, width, height,
         "resizable=1,scrollbars=1,location=0,toolbar=0");
-    // grabfocus(top); // cross origin issues. leave as placeholder for a bit.
+
     return false;
 }
 
@@ -265,8 +265,8 @@ if (typeof dlgclose !== "function") {
         if (!top.tab_mode && typeof top.get_opener === 'function') {
             opener = top.get_opener(window.name) ? top.get_opener(window.name) : window;
         } else {
-            opener = window;
-        }
+        opener = window;
+    }
     }
 
     function dlgclose(call, args) {
@@ -304,7 +304,7 @@ if (typeof dlgclose !== "function") {
                 console.log("Frame: used local find dialog");
             }
         } else {
-            var dialogModal = top.$('div#' + frameName);
+        var dialogModal = top.$('div#' + frameName);
             wframe = top;
         }
 
@@ -329,7 +329,7 @@ if (typeof dlgclose !== "function") {
 *
 * @param {url} string Content location.
 * @param {String} winname If set becomes modal id and/or iframes name. Or, one is created/assigned(iframes).
-* @param {Number| String} width|modalSize(modal-xlg) For sizing: an number will be converted to a percentage of view port width.
+* @param {Number| String} width|modalSize(modal-xl) For sizing: an number will be converted to a percentage of view port width.
 * @param {Number} height Initial minimum height. For iframe auto resize starts at this height.
 * @param {boolean} forceNewWindow Force using a native window.
 * @param {String} title If exist then header with title is created otherwise no header and content only.
@@ -404,11 +404,11 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
     var mHeight, mWidth, mSize, msSize, dlgContainer, fullURL, where; // a growing list...
 
     if (top.tab_mode) {
-        where = opts.type === 'iframe' ? top : window;
+    where = opts.type === 'iframe' ? top : window;
     } else { // if frames u.i, this will search for the first body node so we have a landing place for stackable's
         let wframe = window;
         if (wframe.name !== 'left_nav') {
-            for (let i = 0; wframe.name !== 'RTop' && wframe.name !== 'RBot' && i < 6; wframe = wframe.parent) {
+            for (let i = 0; wframe.name !== 'Calendar' && wframe.name !== 'RTop' && wframe.name !== 'RBot' && i < 6; wframe = wframe.parent) {
                 if (i === 5) {
                     wframe = window;
                 }
@@ -424,7 +424,11 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
             }
         }
 
-        where = wframe; // A moving target for Frames UI.
+        if (typeof wframe.dialogID !== 'undefined') {
+            where = wframe; // A moving target for Frames UI.
+        } else {
+            where = wframe[0];
+        }
     }
 
     // get url straight...
@@ -443,8 +447,12 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
     // what's a window without a name. important for stacking and opener.
     winname = (winname === "_blank" || !winname) ? dialogID() : winname;
 
+    // for small screens or request width is larger than viewport.
+    if (where.innerWidth <= 768) {
+        width = "modal-xl";
+    }
     // Convert dialog size to percentages and/or css class.
-    var sizeChoices = ['modal-sm', 'modal-md', 'modal-mlg', 'modal-lg', 'modal-xl'];
+    var sizeChoices = ['modal-sm', 'modal-md', 'modal-mlg', 'modal-lg', 'modal-xl', 'modal-full'];
     if (Math.abs(width) > 0) {
         width = Math.abs(width);
         mWidth = (width / where.innerWidth * 100).toFixed(4) + '%';
@@ -465,7 +473,9 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
     } else if (mSize === 'modal-lg') {
         msSize = '<style>.modal-custom-' + winname + ' {width:75%;}</style>';
     } else if (mSize === 'modal-xl') {
-        msSize = '<style>.modal-custom-' + winname + ' {width:96%;}</style>';
+        msSize = '<style>.modal-custom-' + winname + ' {width:92%;}</style>';
+    } else if (mSize === 'modal-full') {
+        msSize = '<style>.modal-custom-' + winname + ' {width:97% !important;}</style>';
     }
     mSize = 'modal-custom-' + winname;
 
@@ -561,7 +571,7 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
         // DOM Ready. Handle events and cleanup.
         if (opts.type === 'iframe') {
             var modalwin = where.jQuery('body').find("[name='" + winname + "']");
-            jQuery('div.modal-dialog', modalwin).css({'margin': '15px auto'});
+            jQuery('div.modal-dialog', modalwin).css({'margin': '1.25rem auto'});
             modalwin.on('load', function (e) {
                 setTimeout(function () {
                     if (opts.sizeHeight === 'auto') {
@@ -745,8 +755,8 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
         let viewPortHt = 0;
         let $idoc = jQuery(e.currentTarget);
         if (top.tab_mode) {
-            viewPortHt = Math.max(top.window.document.documentElement.clientHeight, top.window.innerHeight || 0);
-            viewPortWt = Math.max(top.window.document.documentElement.clientWidth, top.window.innerWidth || 0);
+        viewPortHt = Math.max(top.window.document.documentElement.clientHeight, top.window.innerHeight || 0);
+        viewPortWt = Math.max(top.window.document.documentElement.clientWidth, top.window.innerWidth || 0);
         } else {
             viewPortHt = window.innerHeight || 0;
             viewPortWt = window.innerWidth || 0;
@@ -773,7 +783,7 @@ function dlgopen(url, winname, width, height, forceNewWindow, title, opts) {
         jQuery(e.currentTarget).parents('div.modal-content').height('');
         jQuery(e.currentTarget).parent('div.modal-body').css({'height': 0});
         if (top.tab_mode) {
-            viewPortHt = top.window.innerHeight || 0;
+        viewPortHt = top.window.innerHeight || 0;
         } else {
             viewPortHt = where.window.innerHeight || 0;
         }
