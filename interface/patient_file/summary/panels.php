@@ -20,7 +20,7 @@ use OpenEMR\OeUI\OemrUI;
 
 $oemr_ui = new OemrUI($arrOeUiSettings);
 
-if (isset($_GET['set_pid'])) {    
+if (isset($_GET['set_pid'])) {
 	include_once("$srcdir/pid.inc");
 	setpid($_GET['set_pid']);
 }
@@ -35,8 +35,8 @@ if($is_post_request){
 		$panel['risk_stratification'] = $_POST['risk_stratification'] ?? '';
 		$panel['panel_id'] = $_POST['sub_panels'];
 		$panel['patient_id'] =  $pid ?? '';
-		
-		insertEnrolment($panel); 
+
+		insertEnrolment($panel);
 	} else if ($request == "discharge"){
 		$enrollment_id = $_POST['enrollment_id'] ?? '';
 		dischargePatient($enrollment_id);
@@ -81,7 +81,7 @@ tr.selected {
   	color: black;
 }
 input[type=submit] {
-  	background-color: #1E90FF;
+  	background-color: #355615;
   	padding: 5px 10px;
   	border: none;
   	color: white;
@@ -191,12 +191,12 @@ function addSubPanels(ids,titles) {
 	}	}
   	text  +="</select>";
   	document.getElementById("subPanelsDiv").innerHTML =  text;
-}	
+}
 </script>
 
 </head>
 <body class="body_top">
-<div id="container_div" class="<?php echo $oemr_ui->oeContainer();?>"> 
+<div id="container_div" class="<?php echo $oemr_ui->oeContainer();?>">
 <h2>Patient's Panels</h2>
 <?php
 ////////////////////////////////////////////////////////////////
@@ -233,7 +233,7 @@ while ($row = sqlFetchArray($panels)) {
 //that is a combination of patient id and panel id ?>
 <td colspan="1" class="PanelHead"><b><?php echo attr($pid), attr($row['id']); ?></b></td>
 <td colspan="5" class="PanelHead"><b><?php echo attr($row['panel']); ?></b></td>
-<td colspan="1" class="PanelHead"><?php 
+<td colspan="1" class="PanelHead"><?php
 	$pc_eventDate = sqlFetchArray(getPanelAppointment($row['panel'], $pid))['pc_eventDate'];
         if (strtotime($pc_eventDate) > date("d/m/y")){
 		echo attr($pc_eventDate) . " <br/>";
@@ -255,7 +255,7 @@ if($row['status'] == 'Active'){?>
 <form action="#" method="post">
 	<input type="hidden" name="request" value="discharge" />
         <input type="hidden" name="enrollment_id" value="<?php echo attr($row['id']); ?>" />
-        <input type="submit" value="Discharge" 
+        <input type="submit" value="Discharge"
 		onClick="return testFunction('<?php echo attr($row['category']) . ": " . attr($row['panel']); ?>')" />
 </form>
 <?php } else { echo "&nbsp;"; } ?></td></tr>
@@ -273,7 +273,7 @@ if($row['status'] == 'Active'){?>
 <div id="form_background">
 <form action="#" method="post" name="enrolment"  onsubmit="return checkform()" >
 <h3>Enroll to a panel</h3>
-<?php 
+<?php
 
 $panels = getAllPanels();
 
@@ -290,7 +290,7 @@ while($row = sqlFetchArray($subpanels))
 <b><label for="panel">Select the panel:</label></b>
 <select name="panels" id="panels" onchange='addSubPanels( <?php echo json_encode($ids); ?> ,  <?php echo json_encode($titles); ?>)'>
 <option value= "select_panel" id="select_panel" selected disabled>Select Panel</option>
-<?php 
+<?php
 while ($row = sqlFetchArray($panels)) {
 	echo "<option value=\"" . attr($row['option_id']) . "\"";
       	echo "id=\"" . attr($row['option_id']) . "\"";
