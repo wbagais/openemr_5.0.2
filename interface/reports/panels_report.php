@@ -27,10 +27,12 @@ if (!empty($_POST)) {
 
 $_POST['form_details'] = true;
 
-$sql_date_from = (!empty($_POST['date_from'])) ? DateTimeToYYYYMMDDHHMMSS($_POST['date_from']) : date('Y-01-01 H:i:s');
-$sql_date_to = (!empty($_POST['date_to'])) ? DateTimeToYYYYMMDDHHMMSS($_POST['date_to']) : date('Y-m-d H:i:s');
+$sql_date_from = (!empty($_POST['date_from'])) ? DateToYYYYMMDD($_POST['date_from']) : date('Y-01-01');
+$sql_date_to = (!empty($_POST['date_to'])) ? DateToYYYYMMDD($_POST['date_to']) : date('Y-m-d');
 
 $patient_id = trim($_POST["patient_id"]);
+$status = trim($_POST["status"]) ?? 'Active';
+
 ?>
 <html>
     <head>
@@ -91,27 +93,27 @@ $patient_id = trim($_POST["patient_id"]);
                 var d_to = new String($('#date_to').val());
 
                 var d_from_arr = d_from.split('-');
-                var d_to_arr = d_to.split('-');
+		var d_to_arr = d_to.split('-');
 
                 var dt_from = new Date(d_from_arr[0], d_from_arr[1], d_from_arr[2]);
-                var dt_to = new Date(d_to_arr[0], d_to_arr[1], d_to_arr[2]);
+		var dt_to = new Date(d_to_arr[0], d_to_arr[1], d_to_arr[2]);
 
-                var mili_from = dt_from.getTime();
-                var mili_to = dt_to.getTime();
-                var diff = mili_to - mili_from;
 
-                $('#date_error').css("display", "none");
+                //var mili_from = dt_from.getTime();
+                //var mili_to = dt_to.getTime();
+                //var diff = mili_to - mili_from;
+		$('#date_error').css("display", "none");
 
-                if(diff < 0) //negative
-                {
-                    $('#date_error').css("display", "inline");
-                }
-                else
-                {
+                //if(diff < 0) //negative
+                //{
+                 //   $('#date_error').css("display", "inline");
+                //}
+                //else
+                //{
                     $("#form_refresh").attr("value","true");
                     top.restoreSession();
                     $("#theform").submit();
-                }
+                //}
             }
 
             //sorting changes
@@ -139,7 +141,7 @@ $patient_id = trim($_POST["patient_id"]);
                 });
 
                 $('.datetimepicker').datetimepicker({
-                    <?php $datetimepicker_timepicker = true; ?>
+                    <?php $datetimepicker_timepicker = false; ?>
                     <?php $datetimepicker_showseconds = true; ?>
                     <?php $datetimepicker_formatInput = true; ?>
                     <?php require($GLOBALS['srcdir'] . '/js/xl/jquery-datetimepicker-2-5-4.js.php'); ?>
@@ -180,14 +182,14 @@ $patient_id = trim($_POST["patient_id"]);
                     <td width='640px'>
                         <div class="cancel-float" style='float:left'>
                         <table class='text'>
-                            <tr>
-                                <td class='control-label' ><?php echo xlt('From'); ?>: </td>
+			    <tr>
+				<td class='control-label' ><b>Enrollment Date  </b><?php echo xlt('From'); ?>: </td>
                                 <td><input type='text' class='datetimepicker form-control' name='date_from' id="date_from" size='18' value='<?php echo attr(oeFormatDateTime($sql_date_from, 0, true)); ?>'>
                                 </td>
                                 <td class='control-label'><?php echo xlt('To{{range}}'); ?>: </td>
                                 <td><input type='text' class='datetimepicker form-control' name='date_to' id="date_to" size='18' value='<?php echo attr(oeFormatDateTime($sql_date_to, 0, true)); ?>'>
                                 </td>
-                                <td class='control-label'><?php echo xlt('Option'); ?>: </td>
+                                <td class='control-label'><?php echo xlt('Panels'); ?>: </td>
                                 <td class='control-label'>
                                     <select class="form-control" name="srch_option" id="srch_option">
 
@@ -209,7 +211,13 @@ $patient_id = trim($_POST["patient_id"]);
                                 <td><input name='patient_id' class="numeric_only form-control" type='text' id="patient_id" title='<?php echo xla('Optional numeric patient ID'); ?>' value='<?php echo attr($patient_id); ?>' size='10' maxlength='20' /></td>
 
 
-                            </tr>
+			    	<td class='control-label'><?php echo xlt('Status:'); ?>: </td>
+				<td class='control-label'>
+				<select class="form-control" name="status" id="status">
+				<option  <?php echo ($_POST['status'] == 'All') ? 'selected' : ''; ?> value='All'  id = 'All'> <?php echo xlt('All'); ?></option>
+				 <option  <?php echo (($_POST['status'] == 'Active') or $_POST['status'] == '') ? 'selected' : ''; ?> value='Active'  id = 'Active'> <?php echo xlt('Active'); ?></option>
+				 <option  <?php echo ($_POST['status'] == 'Discharged') ? 'selected' : ''; ?> value='Discharged'  id = 'Discharged'> <?php echo xlt('Discharged'); ?></option>
+			</tr>	
 
                         </table>
 
@@ -245,6 +253,9 @@ $patient_id = trim($_POST["patient_id"]);
         // SQL scripts for the various searches
         if ($_POST['form_refresh']) {
             //$sqlstmt = "";
+		$sqlstmt = "SELECT e.* , l.title as sub_panel FROM panel_enrollment  as e ";
+		$sqlstmt .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
+
 
             $srch_option = $_POST['srch_option'];
 	    $sort = array("patient_id","panel_id","risk_stratification", "status", "enrollment_date", "discharge_date");
@@ -254,17 +265,36 @@ $patient_id = trim($_POST["patient_id"]);
             //from
 
             //WHERE Conditions started
-	    $whr_stmt="where 1=1";
+	    $whr_stmt="WHERE list_id = \"Panel_Type\" ";
 	    if($srch_option != 'All'){
 		    $whr_stmt=$whr_stmt ." AND panel_id LIKE \"".  $srch_option . "%\"";
 	    }
 
 	    if (strlen($patient_id) != 0) {
-                $whr_stmt = $whr_stmt."   and pd.pid = ?";
-                array_push($sqlBindArray, $patient_id);
+                $whr_stmt = $whr_stmt."   and patient_id = \"" . $patient_id . "\"";
+	    }
+
+
+	   if (strlen($sql_date_from) != 0) {
+                $whr_stmt = $whr_stmt."   and  enrollment_date >= \"" . $sql_date_from . "\"";
+	   }
+
+
+	     if (strlen($sql_date_to) != 0) {
+                $whr_stmt = $whr_stmt."   and  enrollment_date <= \"" . $sql_date_to . "\"";
             }
-
-
+		
+	    switch($status){
+	    	case '':
+	    	case 'Active':
+		    $whr_stmt = $whr_stmt."   and status = \"Active\" ";
+		    break;
+	    	case 'Discharged':
+		    $whr_stmt = $whr_stmt."   and status = \"Discharged\" ";
+		    break;
+	    	case 'All':
+		    break;
+	    }
 
 
 
@@ -305,7 +335,6 @@ $patient_id = trim($_POST["patient_id"]);
                 }
 
             //echo $sqlstmt."<hr>";
-	    $sqlstmt = "SELECT * FROM panel_enrollment ";
 	    $sqlstmt=$sqlstmt." ".$whr_stmt." ".$odrstmt;
 	    //echo $sqlstmt;
 	    $result = sqlStatement($sqlstmt);
@@ -323,10 +352,11 @@ $patient_id = trim($_POST["patient_id"]);
                         $patArr[] = $row['patient_id'];
                         $patInfoArr = array();
                         $patInfoArr['patient_id'] = $row['patient_id'];
-			$patInfoArr['enrolment_date'] = $row['enrollment_date'];
+			$patInfoArr['enrollment_date'] = $row['enrollment_date'];
 			$patInfoArr['status'] = $row['status'];
 			$patInfoArr['discharge_date'] = $row['discharge_date'];
 			$patInfoArr['panel_id'] = $row['panel_id'];
+			$patInfoArr['sub_panel'] = $row['sub_panel'];
 			$patInfoArr['risk_stratification'] = $row['risk_stratification'];
 			//Diagnosis Check
 			$patFinalDataArr[] = $patInfoArr;
@@ -350,7 +380,8 @@ $patient_id = trim($_POST["patient_id"]);
                     if (True) { ?>
                         <tr style="font-size:15px;">
 			    <td width="15%"><b><?php echo xlt('Patient ID'); ?></b><?php echo $sortlink[0]; ?></td>
-			    <td colspan=2  width="15%"><b><?php echo xlt('Panel'); ?></b><?php echo $sortlink[1]; ?></td>
+			    <td width="15%"><b><?php echo xlt('Panel ID'); ?></b><?php echo $sortlink[1]; ?></td>
+			    <td colspan=2  width="15%"><b><?php echo xlt('Sub Panel'); ?></b><?php echo $sortlink[1]; ?></td>
 			    <td width="15%"><b><?php echo xlt('risk_stratification'); ?></b><?php echo $sortlink[2]; ?></td>
 			    <td width="15%"><b><?php echo xlt('Status'); ?></b><?php echo $sortlink[3]; ?></td>
                             <td width="15%"><b><?php echo xlt('Enrolment Date');?></b><?php echo $sortlink[4]; ?></td>
@@ -359,10 +390,15 @@ $patient_id = trim($_POST["patient_id"]);
                         <?php foreach ($patFinalDataArr as $patKey => $patDetailVal) { ?>
                                 <tr bgcolor = "#CCCCCC" style="font-size:15px;">
 				    <td ><?php echo text($patDetailVal['patient_id']); ?></td>
-				    <td ><?php echo text($patDetailVal['panel_id']); ?></td>
-				    <td colspan=2><?php echo text($patDetailVal['risk_stratification']); ?></td>
+				   
+					<?php $sqlpanl = "SELECT title FROM list_options WHERE list_id =  'Panel_Type' AND option_id = \"" . explode("_",  text($patDetailVal['panel_id']))[0] . "\"";
+					$panel_title = sqlFetchArray(sqlStatement($sqlpanl));
+					echo "<td>" .  $panel_title['title'] . "</td>";					
+						?>
+				    <td colspan=2 ><?php echo text($patDetailVal['sub_panel']); ?></td>
+				    <td><?php echo text($patDetailVal['risk_stratification']); ?></td>
 				    <td ><?php echo text($patDetailVal['status']); ?></td>
-				     <td ><?php echo text($patDetailVal['enrolment_date']); ?></td>
+				     <td ><?php echo text($patDetailVal['enrollment_date']); ?></td>
                                      <td ><?php echo text($patDetailVal['discharge_date']); ?></td>
                                 </tr>
                         <?php	} 
