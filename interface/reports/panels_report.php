@@ -192,15 +192,13 @@ $patient_id = trim($_POST["patient_id"]);
                                     <select class="form-control" name="srch_option" id="srch_option">
 
 					<option> <?php echo xlt('All'); ?></option> 
-<?php
+					<?php
 	   				 $panels = getAllPanels();
-while ($row = sqlFetchArray($panels)) {
-	echo "<option value=\"" . attr($row['option_id']) . "\"";
-      	echo "id=\"" . attr($row['option_id']) . "\"";
-      	echo ">";
-      	echo attr($row['title']) . "</option>";
-}
-					?>
+	    				while ($row = sqlFetchArray($panels)) { ?>
+						<option  <?php echo ($_POST['srch_option'] == $row['option_id']) ? 'selected' : ''; ?> 
+							value="<?php echo attr($row['option_id']); ?>" id=" <?php echo attr($row['option_id']) ; ?>">
+						<?php echo attr($row['title']); ?> </option>
+					<?php }  ?>
 				    </select>		
                                     <?php ?>
                                 </td>
@@ -249,7 +247,10 @@ while ($row = sqlFetchArray($panels)) {
             //$sqlstmt = "";
 
             $srch_option = $_POST['srch_option'];
-
+	    $sort = array("patient_id","panel_id","risk_stratification", "status", "enrollment_date", "discharge_date");
+                    if ($sortby == "") {
+                        $sortby = $sort[1];
+                    }
             //from
 
             //WHERE Conditions started
@@ -306,7 +307,7 @@ while ($row = sqlFetchArray($panels)) {
             //echo $sqlstmt."<hr>";
 	    $sqlstmt = "SELECT * FROM panel_enrollment ";
 	    $sqlstmt=$sqlstmt." ".$whr_stmt." ".$odrstmt;
-	    echo $sqlstmt;
+	    //echo $sqlstmt;
 	    $result = sqlStatement($sqlstmt);
             //print_r($result);
             $row_id = 1.1;//given to each row to identify and toggle
