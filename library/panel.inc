@@ -9,7 +9,23 @@
  * @license   https://github.com/openemr/openemr/blob/master/LICENSE GNU General Public License 3
  */
 
-
+/**
+  * Purpose:
+  * request all  enrolment
+  * @param 
+  * @return list of enrolmments 
+  * {id, patient_id, enrolment_date, discharge_date, status}
+  * if the tables  do not exist:
+  *@return integer return -1
+  */
+function getAllEnrollments()
+{
+  if (isPanelDB())
+  {
+    $sql = "SELECT * FROM panel_enrollment; ";
+    return sqlStatement($sql);
+  } else { return -1; }
+}
  /**
   * Purpose:
   * To check if the panels tables are created

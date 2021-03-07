@@ -13,6 +13,8 @@ require_once("../../globals.php");
 require_once("$srcdir/panel.inc");
 require_once("$srcdir/options.inc.php");
 
+require_once("$srcdir/patient.inc");
+
 use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Common\Logging\EventAuditLogger;
 use OpenEMR\Core\Header;
@@ -44,6 +46,20 @@ if($is_post_request){
 }
 //end of post request section
 ////////////////////////////////////////////////////////////////
+
+$alertmsg = '';
+
+function bucks($amount)
+{
+    if ($amount) {
+        return oeFormatMoney($amount);
+    }
+
+    return "";
+}
+
+$form_start_date = (!empty($_POST['form_start_date'])) ?  DateToYYYYMMDD($_POST['form_start_date']) : date('Y-01-01')
+
 ?>
 <html>
 <head>
@@ -90,7 +106,7 @@ input[type=submit] {
   	cursor: pointer;
 }
 input[type=submit]:hover {
-  	background-color: #1e65ff;
+  	background-color: #409E2D;
 }
 /*for collaps used in the panels table */
 .collapsible {
@@ -194,6 +210,22 @@ function addSubPanels(ids,titles) {
 }
 </script>
 
+<script language="JavaScript">
+
+$(function() {
+    oeFixedHeaderSetup(document.getElementById('mymaintable'));
+    top.printLogSetup(document.getElementById('printbutton'));
+
+    $('.datepicker').datetimepicker({
+        <?php $datetimepicker_timepicker = false; ?>
+        <?php $datetimepicker_showseconds = false; ?>
+        <?php $datetimepicker_formatInput = true; ?>
+        <?php require($GLOBALS['srcdir'] . '/js/xl/jquery-datetimepicker-2-5-4.js.php'); ?>
+        <?php // can add any additional javascript settings to datetimepicker here; need to prepend first setting with a comma ?>
+    });
+});
+
+</script>
 </head>
 <body class="body_top">
 <div id="container_div" class="<?php echo $oemr_ui->oeContainer();?>">
@@ -218,7 +250,7 @@ if (isset($pid)) {
         <th>Enrollment Date</th>
         <th>Discharge Date</th>
         <th>Next Follow Up Date</th>
-        <th>&nbsp;</th>
+	<th>&nbsp;</th>
 </tr>
 
 <?php
@@ -232,14 +264,18 @@ while ($row = sqlFetchArray($panels)) {
 <?php // Case ID is a unique number for active panels
 //that is a combination of patient id and panel id ?>
 <td colspan="1" class="PanelHead"><b><?php echo attr($pid), attr($row['id']); ?></b></td>
-<td colspan="5" class="PanelHead"><b><?php echo attr($row['panel']); ?></b></td>
-<td colspan="1" class="PanelHead"><?php
-	$pc_eventDate = sqlFetchArray(getPanelAppointment($row['panel'], $pid))['pc_eventDate'];
-        if (strtotime($pc_eventDate) > date("d/m/y")){
-		echo attr($pc_eventDate) . " <br/>";
-	}else {
-		echo "&nbsp;";
-	} ?></td></tr>
+<td colspan="6" class="PanelHead"><b><?php echo attr($row['panel']); ?></b></td>
+
+<td colspan="1" class="PanelHead"> 
+<?php  //change bellow  code  with  the last script  code ?>
+<form name='theform' id='theform' method='post' action='#' onsubmit='return top.restoreSession()'>
+
+    <input class='datepicker form-control' type='text' name='form_from_date' id="form_from_date" size='10' value='<?php echo attr(oeFormatShortDate($from_date)); ?>'>
+
+</form>
+</td>
+
+</tr>
 <?php while ($row = sqlFetchArray($SubPanels)) { ?>
 	<tr class="datarow">
         	<td><?php echo "" ?></td>
@@ -247,8 +283,14 @@ while ($row = sqlFetchArray($panels)) {
              	<td><?php echo attr($row['status']); ?></td>
              	<td><?php echo attr($row['risk_stratification']); ?></td>
              	<td><?php echo attr($row['enrollment_date']); ?></td>
-             	<td><?php echo attr($row['discharge_date']); ?></td>
-	<td>
+		<td><?php echo attr($row['discharge_date']); ?></td>
+
+<?php //Next Follow Up Date ?>
+<td>
+&nbsp;
+</td>
+
+<td>
 <?php //display the dischrged button only if the panel status is active
 if($row['status'] == 'Active'){?>
 
