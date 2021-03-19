@@ -12,6 +12,7 @@
 require_once("../../globals.php");
 require_once("$srcdir/panel.inc");
 require_once("$srcdir/options.inc.php");
+require_once("$srcdir/payment_jav.inc.php");
 
 require_once("$srcdir/patient.inc");
 
@@ -19,6 +20,10 @@ use OpenEMR\Common\Csrf\CsrfUtils;
 use OpenEMR\Common\Logging\EventAuditLogger;
 use OpenEMR\Core\Header;
 use OpenEMR\OeUI\OemrUI;
+
+
+
+
 
 $oemr_ui = new OemrUI($arrOeUiSettings);
 
@@ -30,9 +35,14 @@ if (isset($_GET['set_pid'])) {
 //post request section
 //handle the post request for enroll or discharge a panel
 $is_post_request = $_SERVER["REQUEST_METHOD"] == "POST";
+$sql_date = (!empty($_POST['date'])) ? DateToYYYYMMDD($_POST['date']) : date('Y-01-01');
+
+$_POST['form_details'] = true;
+
 
 if($is_post_request){
 	$request = $_POST['request'] ?? '';
+
 	if($request == "enroll"){
 		$panel['risk_stratification'] = $_POST['risk_stratification'] ?? '';
 		$panel['panel_id'] = $_POST['sub_panels'];
@@ -42,6 +52,11 @@ if($is_post_request){
 	} else if ($request == "discharge"){
 		$enrollment_id = $_POST['enrollment_id'] ?? '';
 		dischargePatient($enrollment_id);
+	} else if($request == "follow_up"){
+		$followup['patient_id'] = $pid ?? '';
+		$followup['panel_id'] = $_POST['panel_id'];
+		$followup['date'] = $_POST['date'];
+		insertFollowup($followup);	
 	}
 }
 //end of post request section
@@ -49,24 +64,9 @@ if($is_post_request){
 
 $alertmsg = '';
 
-function bucks($amount)
-{
-    if ($amount) {
-        return oeFormatMoney($amount);
-    }
-
-    return "";
-}
-
-$form_start_date = (!empty($_POST['form_start_date'])) ?  DateToYYYYMMDD($_POST['form_start_date']) : date('Y-01-01')
-
 ?>
 <html>
 <head>
-<?php
-?>
-
-<?php Header::setupHeader(['datetime-picker', 'select2']); ?>
 
 <style>
 .highlight {
@@ -97,8 +97,7 @@ tr.selected {
   	color: black;
 }
 input[type=submit] {
-  	background-color: #355615;
-  	padding: 5px 10px;
+  	background-color: #006633;
   	border: none;
   	color: white;
   	text-decoration: none;
@@ -106,7 +105,7 @@ input[type=submit] {
   	cursor: pointer;
 }
 input[type=submit]:hover {
-  	background-color: #409E2D;
+  	background-color: #006633;
 }
 /*for collaps used in the panels table */
 .collapsible {
@@ -118,11 +117,11 @@ input[type=submit]:hover {
   	outline: none;
   	font-size: 15px;
 }
-
+/*
 .active, .collapsible:hover {
   	background-color: #555;
 }
-
+*/
 .content {
   	padding: 0 18px;
   	display: none;
@@ -135,16 +134,22 @@ input[type=submit]:hover {
   	color: white;
   	cursor: pointer;
 }
+/*
 .active, .PanelHead:hover {
 	background-color: #555;
 }
-
+*/
 
 #form_background {
   	border-radius: 5px;
   	background-color: #f2f2f2;
   	padding: 20px;
 }
+
+#date_input {
+	 width: 40%;
+} 
+
 
 input[type=text], select {
   	width: 100%;
@@ -158,10 +163,23 @@ input[type=text], select {
 </style>
 
 <title><?php echo xlt("Panels"); ?></title>
+        <?php Header::setupHeader(['datetime-picker', 'report-helper']); ?>
 
+        <script language="javascript" type="text/javascript">
+
+            $(function() {
+                $('.datetimepicker').datetimepicker({
+                    <?php $datetimepicker_timepicker = false; ?>
+                    <?php $datetimepicker_showseconds = true; ?>
+                    <?php $datetimepicker_formatInput = true; ?>
+                    <?php require($GLOBALS['srcdir'] . '/js/xl/jquery-datetimepicker-2-5-4.js.php'); ?>
+                    <?php // can add any additional javascript settings to datetimepicker here; need to prepend first setting with a comma ?>
+                });
+            });
+
+        </script>
 <!--This scrept for discharge a pation from a panels
 It is called in the table discharge a tage-->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <script>
 function testFunction(panel) {
 	if (confirm("Do you want to discharge from "+panel+"?")) {
@@ -210,28 +228,20 @@ function addSubPanels(ids,titles) {
 }
 </script>
 
-<script language="JavaScript">
-
-$(function() {
-    oeFixedHeaderSetup(document.getElementById('mymaintable'));
-    top.printLogSetup(document.getElementById('printbutton'));
-
-    $('.datepicker').datetimepicker({
-        <?php $datetimepicker_timepicker = false; ?>
-        <?php $datetimepicker_showseconds = false; ?>
-        <?php $datetimepicker_formatInput = true; ?>
-        <?php require($GLOBALS['srcdir'] . '/js/xl/jquery-datetimepicker-2-5-4.js.php'); ?>
-        <?php // can add any additional javascript settings to datetimepicker here; need to prepend first setting with a comma ?>
-    });
-});
-
-</script>
 </head>
+
 <body class="body_top">
 <div id="container_div" class="<?php echo $oemr_ui->oeContainer();?>">
+
+<!-- Required for the popup date selectors -->
+        <div id="overDiv" style="position:absolute; visibility:hidden; z-index:1000;"></div>
+
 <h2>Patient's Panels</h2>
+
+
 <?php
 ////////////////////////////////////////////////////////////////
+
 //display panels information
 // check if the patien inrolled in any panels
 if (isset($pid)) {
@@ -249,8 +259,7 @@ if (isset($pid)) {
         <th>Risk Stratification</th>
         <th>Enrollment Date</th>
         <th>Discharge Date</th>
-        <th>Next Follow Up Date</th>
-	<th>&nbsp;</th>
+        <th colspan="2">Follow Up Date</th>
 </tr>
 
 <?php
@@ -264,16 +273,32 @@ while ($row = sqlFetchArray($panels)) {
 <?php // Case ID is a unique number for active panels
 //that is a combination of patient id and panel id ?>
 <td colspan="1" class="PanelHead"><b><?php echo attr($pid), attr($row['id']); ?></b></td>
-<td colspan="6" class="PanelHead"><b><?php echo attr($row['panel']); ?></b></td>
+<td colspan="5" class="PanelHead"><b><?php echo attr($row['panel']); ?></b></td>
 
-<td colspan="1" class="PanelHead"> 
+
 <?php  //change bellow  code  with  the last script  code ?>
-<form name='theform' id='theform' method='post' action='#' onsubmit='return top.restoreSession()'>
+<form name='theform' id='theform' method='post' action='panels.php' onSubmit="return Form_Validate();">
+    <input  type="hidden" name="csrf_token_form" value="<?php echo attr(CsrfUtils::collectCsrfToken()); ?>" />
+    <td width="150" colspan="1" class="PanelHead">
+	<input type="hidden" name="request" value="follow_up" />
+	<input type="hidden" name="panel_id" value="<?php echo attr($row['id']); ?>" />
+	<input  type='text' class='datetimepicker form-control' name='date'  id="date"  
+	 value='<?php	$next_follow_up =sqlFetchArray(getFollowUpDate(attr($pid), attr($row['id'])));
+			$follow_up_value = $next_follow_up['follow_up_date'];
+	
+			if (empty($follow_up_value)) {
+				echo " ";
+			} else {
+			echo date("m-d-Y", strtotime(attr($follow_up_value))); } 
+		?>' />
+		
 
-    <input class='datepicker form-control' type='text' name='form_from_date' id="form_from_date" size='10' value='<?php echo attr(oeFormatShortDate($from_date)); ?>'>
+</td>
+   <td colspan="1" class="PanelHead"> 
+     <input  type="submit" value="Submit" />
+   </td>
 
 </form>
-</td>
 
 </tr>
 <?php while ($row = sqlFetchArray($SubPanels)) { ?>
@@ -282,14 +307,10 @@ while ($row = sqlFetchArray($panels)) {
              	<td><?php echo attr($row['sub_panel']); ?></td>
              	<td><?php echo attr($row['status']); ?></td>
              	<td><?php echo attr($row['risk_stratification']); ?></td>
-             	<td><?php echo attr($row['enrollment_date']); ?></td>
-		<td><?php echo attr($row['discharge_date']); ?></td>
+             	<td><?php echo date("m-d-Y", strtotime(attr($row['enrollment_date']))); ?></td>
+		<td><?php echo date("m-d-Y", strtotime(attr($row['discharge_date']))); ?></td>
 
-<?php //Next Follow Up Date ?>
-<td>
-&nbsp;
-</td>
-
+		<td>&nbsp;</td>
 <td>
 <?php //display the dischrged button only if the panel status is active
 if($row['status'] == 'Active'){?>

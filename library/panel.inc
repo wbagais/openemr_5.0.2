@@ -270,29 +270,57 @@ function dischargePatient($enrollment_id){
 
   return sqlQuery($sql);
 }
+
+
 /**
   * Purpose:
-  * return the list of the appointment for the selected panel and patient
-  * @param  string  $panel_name panel name
-  * @param  string $pid patient id number
-  * @param  string $eventDates
-  * if it next, it will return the next follow up appointment
-  * if it all, it will return all the appointments
-  * @return array   appointments list
-  * TODO  fix the appointment  2 functions
+  * insert follow up date for a panel
+  * @param  integer patient id, panel id, date
+  *@return integer return -1
   */
-function getPanelAppointment($panel_name, $pid, $eventDates = 'next'){
-  $sql  = "SELECT e.pc_eventDate, e.pc_startTime, e.pc_endTime, c.pc_catname, e.pc_apptstatus ";
-  $sql .= "FROM openemr_postcalendar_events AS e, openemr_postcalendar_categories AS c ";
-  $sql .= "WHERE  e.pc_catid = c.pc_catid ";
-  $sql .= "AND LOWER(c.pc_catname) LIKE '%" . add_escape_custom($panel_name) . " %'  ";
-  $sql .= "AND e.pc_pid = '" . add_escape_custom($pid) . "' ";
-  if($eventDates == 'next'){
-    $sql .= "AND e.pc_eventDate >= CURRENT_DATE ";
-  }
-  $sql .= "ORDER BY e.pc_eventDate ASC , e.pc_startTime ASC ";
+function insertFollowup($followup)
+{
+  if (isPanelDB())
+  {
+
+  $sql  = "INSERT INTO panel_follow_up ";
+  $sql .= "(patient_id, panel_id, follow_up_date) ";
+  $sql .= " VALUES ( ";
+  $sql .= "'" . add_escape_custom($followup['patient_id']) . "', ";
+  $sql .= "'" .add_escape_custom($followup['panel_id']) . "', ";
+  $sql .= "'" . date(add_escape_custom($followup['date']) ) . "' ";
+  $sql .= ")" ;
+  $result = sqlInsert($sql);
+
+  } else { return -1; }
+}
+
+
+/**
+  * Purpose:
+  * return the next followup date  for the patient
+  * Parameters:
+  * @param integer $patient ID panal id
+  * if the tables exist:
+  * @return date or No follow up date availabel
+  * if the tables  are not exist
+  *@return integer -1
+  */
+function getFollowUpDate($pid, $panel_id)
+{
+  if (isPanelDB())
+  {
+  // get  the category name
+  $sql  = "SELECT DISTINCT follow_up_date ";
+  $sql .= " FROM panel_follow_up ";
+  $sql .= " WHERE panel_id = \"" .  add_escape_custom($panel_id) . "\" ";
+  $sql .= " AND patient_id =\"" . add_escape_custom($pid) . "\" ";
+  $sql .= " AND follow_up_date >=  DATE(NOW()) ";
+  $sql .= " ORDER BY follow_up_date limit 1 ";
 
   return sqlStatement($sql);
+
+  } else { return -1; }
 }
 
 ?>

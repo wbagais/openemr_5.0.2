@@ -27,8 +27,8 @@ if (!empty($_POST)) {
 
 $_POST['form_details'] = true;
 
-$sql_date_from = (!empty($_POST['date_from'])) ? DateToYYYYMMDD($_POST['date_from']) : date('Y-01-01');
-$sql_date_to = (!empty($_POST['date_to'])) ? DateToYYYYMMDD($_POST['date_to']) : date('Y-m-d');
+$sql_date_from = (!empty($_POST['date_from'])) ? DateToYYYYMMDD($_POST['date_from']) : date('01-01-Y');
+$sql_date_to = (!empty($_POST['date_to'])) ? DateToYYYYMMDD($_POST['date_to']) : date('m-d-Y');
 
 $patient_id = trim($_POST["patient_id"]);
 $status = trim($_POST["status"]) ?? 'Active';
@@ -38,7 +38,7 @@ $status = trim($_POST["status"]) ?? 'Active';
     <head>
 
         <title>
-            <?php echo xlt('Panels List'); ?>
+            <?php echo xlt('Panels Report'); ?>
         </title>
 
         <?php Header::setupHeader(['datetime-picker', 'report-helper']); ?>
