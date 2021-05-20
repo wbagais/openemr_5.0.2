@@ -433,7 +433,11 @@ $follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
 					<?php echo text($patDetailVal['patient_id']); ?></td>
 				    <td > <?php $prow = getPatientData($patDetailVal['patient_id'], "*, DATE_FORMAT(DOB,'%Y-%m-%d') as DOB_YMD"); 
 						echo $prow['fname'] . " " . $prow['lname']; ?></td>
-					<td><?php echo $prow['DOB_YMD'];?> </td> 
+					<td><?php 
+						 if (empty($prow['DOB_YMD'])) {
+                                                echo " ";
+                                        } else {							
+						echo date("m-d-Y", strtotime(attr($prow['DOB_YMD'])));}?> </td> 
 					<?php $sqlpanl = "SELECT title FROM list_options WHERE list_id =  'Panel_Type' AND option_id = \"" . explode("_",  text($patDetailVal['panel_id']))[0] . "\"";
 					$panel_title = sqlFetchArray(sqlStatement($sqlpanl));
 					echo "<td>" .  $panel_title['title'] . "</td>";					
@@ -442,11 +446,20 @@ $follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
 				    <td><?php echo text($patDetailVal['risk_stratification']); ?></td>
 				    <td> <?php $next_follow_up =sqlFetchArray(getFollowUpDate(attr($patDetailVal['patient_id']), attr(explode("_",$patDetailVal['panel_id'])[0]), $last = True));
 					$follow_up_value = $next_follow_up['follow_up_date'];
-				        echo $follow_up_value
+					if (empty($follow_up_value)) {
+                                                echo " ";
+                                        } else {
+					echo date("m-d-Y", strtotime(attr($follow_up_value)));}
 				     ?>
 				     <td ><?php echo text($patDetailVal['status']); ?></td>
-				     <td ><?php echo text($patDetailVal['enrollment_date']); ?></td>
-                                     <td ><?php echo text($patDetailVal['discharge_date']); ?></td>
+				     <td ><?php
+					if (empty($patDetailVal['enrollment_date'])) {
+                                		echo " ";
+                        		} else {
+						echo date("m-d-Y", strtotime(attr($patDetailVal['enrollment_date'])));} ?></td>
+                                     <td ><?php if (empty($patDetailVal['discharge_date'])) {
+                                                echo " ";
+                                        } else {echo date("m-d-Y", strtotime(attr($patDetailVal['discharge_date'])));} ?></td>
                                 </tr>
                         <?php	} 
                     }  ?>
