@@ -306,7 +306,7 @@ function insertFollowup($followup)
   * if the tables  are not exist
   *@return integer -1
   */
-function getFollowUpDate($pid, $panel_id)
+function getFollowUpDate($pid, $panel_id, $last = False)
 {
   if (isPanelDB())
   {
@@ -315,7 +315,9 @@ function getFollowUpDate($pid, $panel_id)
   $sql .= " FROM panel_follow_up ";
   $sql .= " WHERE panel_id = \"" .  add_escape_custom($panel_id) . "\" ";
   $sql .= " AND patient_id =\"" . add_escape_custom($pid) . "\" ";
-  $sql .= " AND follow_up_date >=  DATE(NOW()) ";
+  if ($last == false){
+	  $sql .= " AND follow_up_date >=  DATE(NOW()) ";
+  } 
   $sql .= " ORDER BY follow_up_date limit 1 ";
 
   return sqlStatement($sql);

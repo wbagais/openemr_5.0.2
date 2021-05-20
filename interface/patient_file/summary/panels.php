@@ -259,7 +259,7 @@ if (isset($pid)) {
         <th>Risk Stratification</th>
         <th>Enrollment Date</th>
         <th>Discharge Date</th>
-        <th colspan="2">Follow Up Date</th>
+        <th colspan="2">Next Follow Up Date</th>
 </tr>
 
 <?php

@@ -27,12 +27,12 @@ if (!empty($_POST)) {
 
 $_POST['form_details'] = true;
 
-$sql_date_from = (!empty($_POST['date_from'])) ? DateToYYYYMMDD($_POST['date_from']) : date('01-01-Y');
-$sql_date_to = (!empty($_POST['date_to'])) ? DateToYYYYMMDD($_POST['date_to']) : date('m-d-Y');
+$sql_date_from = (!empty($_POST['date_from'])) ? DateToYYYYMMDD($_POST['date_from']) : date('Y-01-01');
+$sql_date_to = (!empty($_POST['date_to'])) ? DateToYYYYMMDD($_POST['date_to']) : date('Y-m-d');
 
 $patient_id = trim($_POST["patient_id"]);
 $status = trim($_POST["status"]) ?? 'Active';
-
+$follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
 ?>
 <html>
     <head>
@@ -85,7 +85,18 @@ $status = trim($_POST["status"]) ?? 'Active';
                     visibility: hidden;
                     display: none;
                 }
-            }
+	    }
+#td:visited {
+  color: blue;
+  background-color: transparent;
+  text-decoration: none;
+}
+
+#td:hover {
+  color: red;
+  background-color: transparent;
+  text-decoration: underline;
+}
         </style>
         <script language="javascript" type="text/javascript">
             function submitForm() {
@@ -211,13 +222,22 @@ $status = trim($_POST["status"]) ?? 'Active';
                                 <td><input name='patient_id' class="numeric_only form-control" type='text' id="patient_id" title='<?php echo xla('Optional numeric patient ID'); ?>' value='<?php echo attr($patient_id); ?>' size='10' maxlength='20' /></td>
 
 
-			    	<td class='control-label'><?php echo xlt('Status:'); ?>: </td>
+			    	<td class='control-label'><?php echo xlt('Status'); ?>: </td>
 				<td class='control-label'>
 				<select class="form-control" name="status" id="status">
 				<option  <?php echo ($_POST['status'] == 'All') ? 'selected' : ''; ?> value='All'  id = 'All'> <?php echo xlt('All'); ?></option>
 				 <option  <?php echo (($_POST['status'] == 'Active') or $_POST['status'] == '') ? 'selected' : ''; ?> value='Active'  id = 'Active'> <?php echo xlt('Active'); ?></option>
 				 <option  <?php echo ($_POST['status'] == 'Discharged') ? 'selected' : ''; ?> value='Discharged'  id = 'Discharged'> <?php echo xlt('Discharged'); ?></option>
-			</tr>	
+			
+</td>
+				<td class='control-label'><?php echo xlt('Follow Up date'); ?>: </td>
+				<td class='control-label'>
+				<select class="form-control" name="follow_up_in" id="follow_up_in">
+				<option  <?php echo (($_POST['follow_up_in'] == 'All') or $_POST['follow_up_in'] == '') ? 'selected' : ''; ?> value='All'  id = 'All'> <?php echo xlt('All'); ?></option>
+				<option  <?php echo ($_POST['follow_up_in'] == 'Next Week') ? 'selected' : ''; ?> value='Next Week'  id = 'Next Week'> <?php echo xlt('Next Week'); ?></option>
+				<option  <?php echo ($_POST['follow_up_in'] == 'Next Month') ? 'selected' : ''; ?> value='Next Month'  id = 'Next Month'> <?php echo xlt('Next Month'); ?></option>
+				<option  <?php echo ($_POST['follow_up_in'] == 'No schedule') ? 'selected' : ''; ?> value='No schedule'  id = 'No schedule'> <?php echo xlt('No schedule'); ?></option>
+</td>			</tr>	
 
                         </table>
 
@@ -255,6 +275,7 @@ $status = trim($_POST["status"]) ?? 'Active';
             //$sqlstmt = "";
 		$sqlstmt = "SELECT e.* , l.title as sub_panel FROM panel_enrollment  as e ";
 		$sqlstmt .= " JOIN list_options AS l ON e.panel_id = l.option_id  ";
+		$sqlstmt .= " LEFT JOIN panel_follow_up as f ON SUBSTRING_INDEX(option_id, '_', 1)  = f.panel_id AND  e.patient_id = f.patient_id ";
 
 
             $srch_option = $_POST['srch_option'];
@@ -284,6 +305,7 @@ $status = trim($_POST["status"]) ?? 'Active';
                 $whr_stmt = $whr_stmt."   and  enrollment_date <= \"" . $sql_date_to . "\"";
             }
 		
+	    
 	    switch($status){
 	    	case '':
 	    	case 'Active':
@@ -296,7 +318,22 @@ $status = trim($_POST["status"]) ?? 'Active';
 		    break;
 	    }
 
+	    //$follow_up_in = 'Next Month';
+	    switch($follow_up_in){
+	    case '':
+		    break;
+	    case 'Next Week':
+		    $whr_stmt = $whr_stmt."   and f.follow_up_date >=  DATE(NOW()) AND f.follow_up_date <= DATE(NOW() + INTERVAL 7 DAY) ";
+	    	    break;
+	    
+	    case 'No schedule':
+                    $whr_stmt = $whr_stmt."   and (f.follow_up_date <=  DATE(NOW()) OR f.follow_up_date is NULL) ";
+		    break;
 
+	   case 'Next Month':
+                    $whr_stmt = $whr_stmt."   and f.follow_up_date >=  DATE(NOW()) AND f.follow_up_date <= DATE(NOW() + INTERVAL 30 DAY)  ";
+                    break;
+	    }
 
             //Sorting By filter fields
             $sortby = $_POST['sortby'];
@@ -379,25 +416,35 @@ $status = trim($_POST["status"]) ?? 'Active';
                     <?php
                     if (True) { ?>
                         <tr style="font-size:15px;">
-			    <td width="15%"><b><?php echo xlt('Patient ID'); ?></b><?php echo $sortlink[0]; ?></td>
-			    <td width="15%"><b><?php echo xlt('Panel ID'); ?></b><?php echo $sortlink[1]; ?></td>
-			    <td colspan=2  width="15%"><b><?php echo xlt('Sub Panel'); ?></b><?php echo $sortlink[1]; ?></td>
-			    <td width="15%"><b><?php echo xlt('risk_stratification'); ?></b><?php echo $sortlink[2]; ?></td>
-			    <td width="15%"><b><?php echo xlt('Status'); ?></b><?php echo $sortlink[3]; ?></td>
-                            <td width="15%"><b><?php echo xlt('Enrolment Date');?></b><?php echo $sortlink[4]; ?></td>
-                            <td width="15%"><b><?php echo xlt('Discharge Date'); ?></b><?php echo $sortlink[5]; ?></td>
+			    <td width="7%"><b><?php echo xlt('Patient ID'); ?></b><?php echo $sortlink[0]; ?></td>
+			    <td width="12%"><b><?php echo xlt('Patient\'s Name'); ?></b><?php echo $sortlink[1]; ?></td>
+			    <td width="12%"><b><?php echo xlt('Patient\'s Date of Birth'); ?></b><?php echo $sortlink[2]; ?></td>
+			    <td width="10%"><b><?php echo xlt('Panel ID'); ?></b><?php echo $sortlink[3]; ?></td>
+			    <td colspan=2  width="10%"><b><?php echo xlt('Sub Panel'); ?></b><?php echo $sortlink[4]; ?></td>
+			    <td width="10%"><b><?php echo xlt('risk_stratification'); ?></b><?php echo $sortlink[5]; ?></td>
+		    	    <td width="13%"><b>Next/Last Follow Up Date</b></td>
+			    <td width="6%"><b><?php echo xlt('Status'); ?></b><?php echo $sortlink[6]; ?></td>
+                            <td width="10%"><b><?php echo xlt('Enrolment Date');?></b><?php echo $sortlink[7]; ?></td>
+                            <td width="10%"><b><?php echo xlt('Discharge Date'); ?></b><?php echo $sortlink[8]; ?></td>
                         </tr>
                         <?php foreach ($patFinalDataArr as $patKey => $patDetailVal) { ?>
                                 <tr bgcolor = "#CCCCCC" style="font-size:15px;">
-				    <td ><?php echo text($patDetailVal['patient_id']); ?></td>
-				   
+				    <td id=td  onclick="location.href =' <?php echo '../patient_file/summary/demographics.php?set_pid=' . $patDetailVal['patient_id'] ; ?>'">
+					<?php echo text($patDetailVal['patient_id']); ?></td>
+				    <td > <?php $prow = getPatientData($patDetailVal['patient_id'], "*, DATE_FORMAT(DOB,'%Y-%m-%d') as DOB_YMD"); 
+						echo $prow['fname'] . " " . $prow['lname']; ?></td>
+					<td><?php echo $prow['DOB_YMD'];?> </td> 
 					<?php $sqlpanl = "SELECT title FROM list_options WHERE list_id =  'Panel_Type' AND option_id = \"" . explode("_",  text($patDetailVal['panel_id']))[0] . "\"";
 					$panel_title = sqlFetchArray(sqlStatement($sqlpanl));
 					echo "<td>" .  $panel_title['title'] . "</td>";					
 						?>
 				    <td colspan=2 ><?php echo text($patDetailVal['sub_panel']); ?></td>
 				    <td><?php echo text($patDetailVal['risk_stratification']); ?></td>
-				    <td ><?php echo text($patDetailVal['status']); ?></td>
+				    <td> <?php $next_follow_up =sqlFetchArray(getFollowUpDate(attr($patDetailVal['patient_id']), attr(explode("_",$patDetailVal['panel_id'])[0]), $last = True));
+					$follow_up_value = $next_follow_up['follow_up_date'];
+				        echo $follow_up_value
+				     ?>
+				     <td ><?php echo text($patDetailVal['status']); ?></td>
 				     <td ><?php echo text($patDetailVal['enrollment_date']); ?></td>
                                      <td ><?php echo text($patDetailVal['discharge_date']); ?></td>
                                 </tr>
