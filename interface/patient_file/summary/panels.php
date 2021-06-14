@@ -1,4 +1,4 @@
-<?php
+<?php	
 /**
  * Panels
  * @package   OpenEMR
@@ -12,7 +12,7 @@
 require_once("../../globals.php");
 require_once("$srcdir/panel.inc");
 require_once("$srcdir/options.inc.php");
-require_once("$srcdir/payment_jav.inc.php");
+//require_once("$srcdir/payment_jav.inc.php");
 
 require_once("$srcdir/patient.inc");
 
@@ -289,7 +289,7 @@ while ($row = sqlFetchArray($panels)) {
 			if (empty($follow_up_value)) {
 				echo " ";
 			} else {
-			echo date("m-d-Y", strtotime(attr($follow_up_value))); } 
+			echo oeFormatShortDate(attr($follow_up_value)); } 
 		?>' />
 		
 
@@ -307,8 +307,14 @@ while ($row = sqlFetchArray($panels)) {
              	<td><?php echo attr($row['sub_panel']); ?></td>
              	<td><?php echo attr($row['status']); ?></td>
              	<td><?php echo attr($row['risk_stratification']); ?></td>
-             	<td><?php echo date("m-d-Y", strtotime(attr($row['enrollment_date']))); ?></td>
-		<td><?php echo date("m-d-Y", strtotime(attr($row['discharge_date']))); ?></td>
+             	<td><?php echo oeFormatShortDate(attr($row['enrollment_date'])); ?></td>
+		<td><?php 
+		if (empty($row['discharge_date'])) {
+                        echo " ";
+                } else {
+			echo oeFormatShortDate(attr($row['discharge_date']));
+		}	
+		?></td>
 
 		<td>&nbsp;</td>
 <td>

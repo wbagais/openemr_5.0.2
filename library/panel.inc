@@ -288,7 +288,7 @@ function insertFollowup($followup)
   $sql .= " VALUES ( ";
   $sql .= "'" . add_escape_custom($followup['patient_id']) . "', ";
   $sql .= "'" .add_escape_custom($followup['panel_id']) . "', ";
-  $sql .= "'" . date(add_escape_custom($followup['date']) ) . "' ";
+  $sql .= "'" . date("Y-m-d", strtotime(add_escape_custom($followup['date']))) . "' ";
   $sql .= ")" ;
   $result = sqlInsert($sql);
 

@@ -1575,7 +1575,7 @@ $oemr_ui = new OemrUI($arrOeUiSettings);
                         $panels = getPanelsByPatient_id($pid);
                   
                         if ($panels === -1 or sqlNumRows($panels)<1) {
-                          echo ("This patien is not inrolled in any panel");
+                          echo ("This patient is not enrolled in any panel");
                         }
 
                         while ($row = sqlFetchArray($panels)) {

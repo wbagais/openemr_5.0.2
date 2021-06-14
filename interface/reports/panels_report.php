@@ -288,7 +288,7 @@ $follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
             //WHERE Conditions started
 	    $whr_stmt="WHERE list_id = \"Panel_Type\" ";
 	    if($srch_option != 'All'){
-		    $whr_stmt=$whr_stmt ." AND panel_id LIKE \"".  $srch_option . "%\"";
+		    $whr_stmt=$whr_stmt ." AND e.panel_id LIKE \"".  $srch_option . "%\"";
 	    }
 
 	    if (strlen($patient_id) != 0) {
@@ -318,7 +318,7 @@ $follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
 		    break;
 	    }
 
-	    //$follow_up_in = 'Next Month';
+	    //$follow_up_in = 'NNext/Last Follow Up Date	ext Month';
 	    switch($follow_up_in){
 	    case '':
 		    break;
@@ -437,7 +437,7 @@ $follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
 						 if (empty($prow['DOB_YMD'])) {
                                                 echo " ";
                                         } else {							
-						echo date("m-d-Y", strtotime(attr($prow['DOB_YMD'])));}?> </td> 
+						echo oeFormatShortDate(attr($prow['DOB_YMD']));}?> </td> 
 					<?php $sqlpanl = "SELECT title FROM list_options WHERE list_id =  'Panel_Type' AND option_id = \"" . explode("_",  text($patDetailVal['panel_id']))[0] . "\"";
 					$panel_title = sqlFetchArray(sqlStatement($sqlpanl));
 					echo "<td>" .  $panel_title['title'] . "</td>";					
@@ -449,17 +449,17 @@ $follow_up_in = trim($_POST["follow_up_in"]) ?? 'All';
 					if (empty($follow_up_value)) {
                                                 echo " ";
                                         } else {
-					echo date("m-d-Y", strtotime(attr($follow_up_value)));}
+					echo oeFormatShortDate(attr($follow_up_value));}
 				     ?>
 				     <td ><?php echo text($patDetailVal['status']); ?></td>
 				     <td ><?php
 					if (empty($patDetailVal['enrollment_date'])) {
                                 		echo " ";
                         		} else {
-						echo date("m-d-Y", strtotime(attr($patDetailVal['enrollment_date'])));} ?></td>
+						echo oeFormatShortDate(attr($patDetailVal['enrollment_date']));} ?></td>
                                      <td ><?php if (empty($patDetailVal['discharge_date'])) {
                                                 echo " ";
-                                        } else {echo date("m-d-Y", strtotime(attr($patDetailVal['discharge_date'])));} ?></td>
+                                        } else {echo oeFormatShortDate(attr($patDetailVal['discharge_date']));} ?></td>
                                 </tr>
                         <?php	} 
                     }  ?>
