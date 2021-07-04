@@ -1573,9 +1573,9 @@ $oemr_ui = new OemrUI($arrOeUiSettings);
 
                         #dispday patient current panels
                         $panels = getPanelsByPatient_id($pid);
-                  
+
                         if ($panels === -1 or sqlNumRows($panels)<1) {
-                          echo ("This patien is not inrolled in any panel");
+                          echo ("This Patient is not enrolled in any panel");
                         }
 
                         while ($row = sqlFetchArray($panels)) {
@@ -1584,7 +1584,7 @@ $oemr_ui = new OemrUI($arrOeUiSettings);
                           	echo "<b>" . attr($row['panel']) . ": </b> <br/>";
 
                           	while ($row = sqlFetchArray($SubPanels)) {
-                            		//print the sub panels     		
+                            		//print the sub panels
                             		echo attr($row['sub_panel']) . " ";
                             		echo "(enrollment date: " . attr($row['enrollment_date']) . ") <br/>";
 					$pc_eventDate = sqlFetchArray(getPanelAppointment($row['sub_panel'], $pid))['pc_eventDate'];

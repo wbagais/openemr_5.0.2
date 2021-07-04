@@ -1,0 +1,28 @@
+DROP TABLE panel_enrollment;
+
+DROP TABLE panel;
+
+DROP TABLE panel_category;
+
+ALTER TABLE list_options ADD KEY option_id (option_id);
+
+create table panel_enrollment (
+    id int(4) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    patient_id bigint,
+    panel_id  varchar(100),
+    enrollment_date date,
+    discharge_date date,
+    status varchar(250),
+    risk_stratification varchar(250),
+    Foreign key(patient_id) REFERENCES patient_data(pid),
+    Foreign key(panel_id) REFERENCES list_options(option_id)
+);
+
+Create table panel_follow_up (
+    id int(4) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    patient_id bigint,
+    panel_id varchar(100),
+    follow_up_date date,
+    Foreign key(patient_id) REFERENCES patient_data(pid),
+    Foreign key(panel_id) REFERENCES list_options(option_id)	
+);
