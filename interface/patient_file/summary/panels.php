@@ -1,4 +1,4 @@
-<?php
+<?php	
 /**
  * Panels
  * @package   OpenEMR
@@ -12,7 +12,7 @@
 require_once("../../globals.php");
 require_once("$srcdir/panel.inc");
 require_once("$srcdir/options.inc.php");
-require_once("$srcdir/payment_jav.inc.php");
+//require_once("$srcdir/payment_jav.inc.php");
 
 require_once("$srcdir/patient.inc");
 
@@ -52,11 +52,19 @@ if($is_post_request){
 	} else if ($request == "discharge"){
 		$enrollment_id = $_POST['enrollment_id'] ?? '';
 		dischargePatient($enrollment_id);
+	
 	} else if($request == "follow_up"){
+		$followup['action_type'] = $_POST['action_type'];
 		$followup['patient_id'] = $pid ?? '';
-		$followup['panel_id'] = $_POST['panel_id'];
+                $followup['panel_id'] = $_POST['panel_id'];
 		$followup['date'] = $_POST['date'];
-		insertFollowup($followup);	
+
+		if($followup['action_type'] == 'new'){
+			insertFollowup($followup);	
+		}
+		if($followup['action_type'] == 'delete'){
+                        deleteFollowup($followup);
+                }
 	}
 }
 //end of post request section
@@ -274,31 +282,18 @@ while ($row = sqlFetchArray($panels)) {
 //that is a combination of patient id and panel id ?>
 <td colspan="1" class="PanelHead"><b><?php echo attr($pid), attr($row['id']); ?></b></td>
 <td colspan="5" class="PanelHead"><b><?php echo attr($row['panel']); ?></b></td>
-
-
+<td colspan="2" class="PanelHead"><b>
 <?php  //change bellow  code  with  the last script  code ?>
-<form name='theform' id='theform' method='post' action='panels.php' onSubmit="return Form_Validate();">
-    <input  type="hidden" name="csrf_token_form" value="<?php echo attr(CsrfUtils::collectCsrfToken()); ?>" />
-    <td width="150" colspan="1" class="PanelHead">
-	<input type="hidden" name="request" value="follow_up" />
-	<input type="hidden" name="panel_id" value="<?php echo attr($row['id']); ?>" />
-	<input  type='text' class='datetimepicker form-control' name='date'  id="date"  
-	 value='<?php	$next_follow_up =sqlFetchArray(getFollowUpDate(attr($pid), attr($row['id'])));
+<?php	$next_follow_up =sqlFetchArray(getFollowUpDate(attr($pid), attr($row['id'])));
 			$follow_up_value = $next_follow_up['follow_up_date'];
 	
 			if (empty($follow_up_value)) {
 				echo " ";
 			} else {
-			echo date("m-d-Y", strtotime(attr($follow_up_value))); } 
-		?>' />
+			echo oeFormatShortDate(attr($follow_up_value)); } 
+?></b></td>
 		
 
-</td>
-   <td colspan="1" class="PanelHead"> 
-     <input  type="submit" value="Submit" />
-   </td>
-
-</form>
 
 </tr>
 <?php while ($row = sqlFetchArray($SubPanels)) { ?>
@@ -307,8 +302,14 @@ while ($row = sqlFetchArray($panels)) {
              	<td><?php echo attr($row['sub_panel']); ?></td>
              	<td><?php echo attr($row['status']); ?></td>
              	<td><?php echo attr($row['risk_stratification']); ?></td>
-             	<td><?php echo date("m-d-Y", strtotime(attr($row['enrollment_date']))); ?></td>
-		<td><?php echo date("m-d-Y", strtotime(attr($row['discharge_date']))); ?></td>
+             	<td><?php echo oeFormatShortDate(attr($row['enrollment_date'])); ?></td>
+		<td><?php 
+		if (empty($row['discharge_date'])) {
+                        echo " ";
+                } else {
+			echo oeFormatShortDate(attr($row['discharge_date']));
+		}	
+		?></td>
 
 		<td>&nbsp;</td>
 <td>
@@ -333,6 +334,9 @@ if($row['status'] == 'Active'){?>
 ?>
 
 <?php //adding the patient into a new panels ?>
+<table>
+<tr>
+    <th width="50%"> 
 <div id="form_background">
 <form action="#" method="post" name="enrolment"  onsubmit="return checkform()" >
 <h3>Enroll to a panel</h3>
@@ -379,6 +383,51 @@ while ($row = sqlFetchArray($panels)) {
 
 </form>
 </div> <!-- end of the form -->
+</th> <th></th>
+<th align="left" width="45%">
+<!-- Start the Schedule appointment form -->
+<div  id="form_background">
+
+<form name='theform' id='theform' method='post' action='panels.php' onSubmit="return Form_Validate();">
+
+<h3>Schedule follow up</h3>
+<b><label for="action_type">Select Action:</label></b>
+<select name="action_type" id="action_type" >
+<option value="new"  >New Appointment</option>
+<!-- <option value="edit" >Edit Appointment</option> -->
+<option value="delete" >Cancel Appointment</option>
+</select>
+
+<?php $panels = getAllPanels(); ?>
+<b><label for="panel">Select the panel:</label></b>
+<select name="panel_id" id="panel_id" >
+<option value= "select_panel" id="select_panel" selected disabled>Select Panel</option>
+<?php
+while ($row = sqlFetchArray($panels)) {
+	echo "<option value=\"" . attr($row['option_id']) . "\"";
+      	echo "id=\"" . attr($row['option_id']) . "\"";
+      	echo ">";
+      	echo attr($row['title']) . "</option>";
+} ?>
+</select>
+<b><label for="date">Select date</label>
+<input  type='text' class='datetimepicker form-control' name='date'  id="date"
+	 value='<?php	$next_follow_up =sqlFetchArray(getFollowUpDate(attr($pid), attr($row['id'])));
+			$follow_up_value = $next_follow_up['follow_up_date'];
+
+			if (empty($follow_up_value)) {
+				echo " ";
+			} else {
+			echo date("m-d-Y", strtotime(attr($follow_up_value))); }
+		?>' />
+
+<input type="hidden" name="request" value="follow_up" />
+<input type="submit" value="Submit"/>
+</form>
+</div>
+</th>
+</tr>
+</table>
 <?php //end of the adding panels section ?>
 
 </div>
