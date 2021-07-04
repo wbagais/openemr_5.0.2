@@ -1546,8 +1546,6 @@ $oemr_ui = new OemrUI($arrOeUiSettings);
                         echo "</div>";
                     } // end if crw
                     //////////////////////////////////////////////////////////////////
-
-
                     // Show Panels  for selected user.
                     echo "<div>";
                     if (isset($pid)) {
@@ -1579,18 +1577,19 @@ $oemr_ui = new OemrUI($arrOeUiSettings);
                         }
 
                         while ($row = sqlFetchArray($panels)) {
-				$SubPanels = getPatientSubPanelsInfo($pid,$row['id']);
+				$SubPanels = getPatientSubPanelsInfo($pid,$row['id'], "all");
 				//print the category
                           	echo "<b>" . attr($row['panel']) . ": </b> <br/>";
 
                           	while ($row = sqlFetchArray($SubPanels)) {
                             		//print the sub panels     		
-                            		echo attr($row['sub_panel']) . " ";
-                            		echo "(enrollment date: " . attr($row['enrollment_date']) . ") <br/>";
-					$pc_eventDate = sqlFetchArray(getPanelAppointment($row['sub_panel'], $pid))['pc_eventDate'];
-					if (strtotime($pc_eventDate) > date("d/m/y")){
-                              			echo "<b>Follow Up Date: </b>" . attr($pc_eventDate) . " <br/>";
-                            }
+					echo attr($row['sub_panel']) . " ";
+					if(empty(attr($row['discharge_date']))){
+						echo "(enrollment date: " . attr($row['enrollment_date']) . ") <br/>";
+					} else {
+						echo "(Discharge date: : ". attr($row['discharge_date']) . ") <br/>";
+					}
+
                           }
                           echo "<br/>"; // to keep empty line between the panels
                         }
