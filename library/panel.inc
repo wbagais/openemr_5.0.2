@@ -82,6 +82,7 @@ function getAllPanels()
   $sql = "SELECT * FROM list_options ";
   $sql .= " WHERE list_id =  'Panel_Type' ";
   $sql .= " AND option_id NOT LIKE \"%\\_%\" ";
+  $sql .= " AND activity = 1 ";
   return sqlStatement($sql);
   } else { return -1; }
 }
@@ -295,6 +296,25 @@ function insertFollowup($followup)
   } else { return -1; }
 }
 
+/**
+  * Purpose:
+  * cancel follow up date for a panel
+  * @param  integer patient id, panel id, date
+  *@return integer return -1
+  */
+function deleteFollowup($followup)
+{
+  if (isPanelDB())
+  {
+
+  $sql  = "DELETE FROM  panel_follow_up ";
+  $sql .= " WHERE patient_id = '" . add_escape_custom($followup['patient_id']) . "' ";
+  $sql .= " AND panel_id = '" .add_escape_custom($followup['panel_id']) . "' ";
+  $sql .= " AND follow_up_date = '" . date(add_escape_custom($followup['date']) ) . "' ";
+  $result = sqlInsert($sql);
+
+  } else { return -1; }
+}
 
 /**
   * Purpose:
