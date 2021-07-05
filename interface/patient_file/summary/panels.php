@@ -23,7 +23,7 @@ use OpenEMR\OeUI\OemrUI;
 
 
 
-
+use OpenEMR\Common\Acl\AclMain;
 
 $oemr_ui = new OemrUI($arrOeUiSettings);
 
@@ -52,6 +52,12 @@ if($is_post_request){
 	} else if ($request == "discharge"){
 		$enrollment_id = $_POST['enrollment_id'] ?? '';
 		dischargePatient($enrollment_id);
+	
+	} else if ( $request == "delete"){
+		$enrollment_id = $_POST['enrollment_id'] ?? '';
+		deleteEnrollment($enrollment_id);
+	
+	
 	
 	} else if($request == "follow_up"){
 		$followup['action_type'] = $_POST['action_type'];
@@ -197,6 +203,13 @@ function testFunction(panel) {
 	}
 }
 
+function delete_panel(panel) {
+        if (confirm("Do you want to delete "+panel+"?")) {
+                return true ;
+        } else {
+                return false ;
+		}
+}
 $( document ).ready(function() {
 	//collapse and expand section
 	$('.breakrow').click(function(){
@@ -298,7 +311,18 @@ while ($row = sqlFetchArray($panels)) {
 </tr>
 <?php while ($row = sqlFetchArray($SubPanels)) { ?>
 	<tr class="datarow">
-        	<td><?php echo "" ?></td>
+		<td><?php echo "" ?>
+<form action="#" method="post">
+        <input type="hidden" name="request" value="delete" />
+        <input type="hidden" name="enrollment_id" value="<?php echo attr($row['id']); ?>" />
+
+        <button type="submit"  style="background-color: Transparent;border: none;"
+                onClick="return delete_panel('<?php echo attr($row['panel']) . ": " . attr($row['sub_panel']); ?>')" >
+
+   <i class="fa fa-trash-o" style="font-size:24px;color:red"></i>
+</button>
+</form>
+</td>
              	<td><?php echo attr($row['sub_panel']); ?></td>
              	<td><?php echo attr($row['status']); ?></td>
              	<td><?php echo attr($row['risk_stratification']); ?></td>
@@ -320,9 +344,10 @@ if($row['status'] == 'Active'){?>
 	<input type="hidden" name="request" value="discharge" />
         <input type="hidden" name="enrollment_id" value="<?php echo attr($row['id']); ?>" />
         <input type="submit" value="Discharge"
-		onClick="return testFunction('<?php echo attr($row['category']) . ": " . attr($row['panel']); ?>')" />
+		onClick="return testFunction('<?php echo attr($row['panel']) . ": " . attr($row['sub_panel']); ?>')" />
 </form>
-<?php } else { echo "&nbsp;"; } ?></td></tr>
+<?php } else { echo "&nbsp;"; } ?>
+</td></tr>
 <?php } // end the while loop?>
 <?php } // end the while loop?>
 </table>
