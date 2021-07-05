@@ -272,7 +272,12 @@ function dischargePatient($enrollment_id){
   return sqlQuery($sql);
 }
 
+function deleteEnrollment($enrollment_id){
 
+	$sql = "DELETE FROM panel_enrollment";
+	$sql .= " WHERE id = '" . add_escape_custom($enrollment_id) . "' ";
+	return sqlQuery($sql);
+}
 /**
   * Purpose:
   * insert follow up date for a panel
